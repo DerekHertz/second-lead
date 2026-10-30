@@ -1,101 +1,137 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import App from './App'
+import type { Scene } from './scene'
+import { starterScenes } from './scenes'
+import { FakeSpeechProvider } from './speech/fake'
 
-async function startFamilyDinner(roleName: string) {
+const dinner = starterScenes.find((s) => s.id === 'family-dinner')!
+const learnerHanzi = (scene: Scene, roleId: string) =>
+  scene.lines.filter((l) => l.roleId === roleId).map((l) => l.hanzi)
+
+async function start(title: string, roleName: string, provider = new FakeSpeechProvider()) {
   const user = userEvent.setup()
-  render(<App />)
-  await user.click(screen.getByRole('button', { name: 'Family dinner' }))
+  render(<App speech={provider} />)
+  await user.click(screen.getByRole('button', { name: title }))
   await user.click(screen.getByRole('button', { name: roleName }))
-  return user
+  return { user, provider }
 }
 
-describe('walking through a scene', () => {
-  it('lets the learner pick a scene, then a role, then step forward and back through its lines', async () => {
+const status = () => screen.getByRole('status').textContent ?? ''
+
+describe('picking a scene and a role', () => {
+  it('lists the starter scenes by their real titles, then the scene’s roles', async () => {
     const user = userEvent.setup()
-    render(<App />)
-
-    // Scene picker first
+    render(<App speech={new FakeSpeechProvider()} />)
     expect(screen.getByRole('heading', { name: 'Pick a scene' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Taxi' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Taxi to the train station' })).toBeTruthy()
     await user.click(screen.getByRole('button', { name: 'Family dinner' }))
-
-    // Then the role picker, listing the scene's roles
     expect(screen.getByRole('heading', { name: 'Pick your role' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Mom' })).toBeTruthy()
-    await user.click(screen.getByRole('button', { name: 'Kid' }))
-
-    // Line 1 of 4, then forward and back
-    expect(screen.getByText('Line 1 of 4')).toBeTruthy()
-    expect(screen.getByText('Have you eaten?')).toBeTruthy()
-    const previous = screen.getByRole('button', { name: 'Previous line' }) as HTMLButtonElement
-    const next = screen.getByRole('button', { name: 'Next line' }) as HTMLButtonElement
-    expect(previous.disabled).toBe(true)
-
-    await user.click(next)
-    expect(screen.getByText('Line 2 of 4')).toBeTruthy()
-    expect(screen.getByText('I ate, Mom.')).toBeTruthy()
-    expect(screen.queryByText('Have you eaten?')).toBeNull()
-
-    await user.click(next)
-    await user.click(next)
-    expect(screen.getByText('Line 4 of 4')).toBeTruthy()
-    expect(next.disabled).toBe(true)
-
-    await user.click(previous)
-    expect(screen.getByText('Line 3 of 4')).toBeTruthy()
-    expect(screen.getByText('Do you have a girlfriend yet?')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Kid' })).toBeTruthy()
   })
 
-  it('goes back to the scene picker from a scene', async () => {
-    const user = await startFamilyDinner('Kid')
+  it('goes back to the scene picker from a take', async () => {
+    const { user } = await start('Family dinner', 'Kid')
     await user.click(screen.getByRole('button', { name: 'Back to scenes' }))
     expect(screen.getByRole('heading', { name: 'Pick a scene' })).toBeTruthy()
   })
 })
 
-describe('rendering a line', () => {
-  it('shows each word of the characters with its pinyin above, and the English below', async () => {
-    await startFamilyDinner('Kid')
-
-    const line = screen.getByRole('article')
-    const words = line.querySelectorAll('ruby')
-    // 你 吃 饭 了 吗
-    expect(Array.from(words, (w) => w.firstChild?.textContent)).toEqual(['你', '吃饭', '了', '吗？'])
-    expect(Array.from(words, (w) => w.querySelector('rt')?.textContent)).toEqual([
-      'nǐ',
-      'chīfàn',
-      'le',
-      'ma',
-    ])
-
-    // The English comes after (below) the characters
-    const english = within(line).getByText('Have you eaten?')
-    const lastWord = words[words.length - 1]
-    expect(lastWord.compareDocumentPosition(english) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    // and names the speaking character
-    expect(within(line).getByText('Mom')).toBeTruthy()
+describe('a scene with no lines', () => {
+  it('says so, with a way back, instead of crashing', async () => {
+    const empty: Scene = { id: 'e', title: 'Empty scene', roles: [{ id: 'a', name: 'Anna' }], lines: [] }
+    const user = userEvent.setup()
+    render(<App scenes={[empty]} speech={new FakeSpeechProvider()} />)
+    await user.click(screen.getByRole('button', { name: 'Empty scene' }))
+    await user.click(screen.getByRole('button', { name: 'Anna' }))
+    expect(screen.getByRole('alert').textContent).toMatch(/no lines/i)
+    await user.click(screen.getByRole('button', { name: 'Back to scenes' }))
+    expect(screen.getByRole('heading', { name: 'Pick a scene' })).toBeTruthy()
   })
 })
 
-describe('marking the learner’s lines', () => {
-  it('marks only the lines spoken by the learner’s role', async () => {
-    const user = await startFamilyDinner('Kid')
-
-    // Line 1 is Mom's: not marked
-    expect(screen.getByRole('article').getAttribute('data-learner')).toBe('false')
-    expect(screen.queryByText('Your line')).toBeNull()
-
-    // Line 2 is the Kid's: marked
-    await user.click(screen.getByRole('button', { name: 'Next line' }))
-    expect(screen.getByRole('article').getAttribute('data-learner')).toBe('true')
+describe('playing a take', () => {
+  it('speaks the other character, then listens on the learner’s line', async () => {
+    const { provider } = await start('Family dinner', 'Kid')
+    await waitFor(() => expect(status()).toMatch(/listening/i))
+    expect(provider.spoken[0]!.text).toBe(dinner.lines[0]!.hanzi)
     expect(screen.getByText('Your line')).toBeTruthy()
+    expect(screen.getByText('Line 2 of 10')).toBeTruthy()
   })
 
-  it('marks the other role’s lines when the learner picks the other role', async () => {
-    await startFamilyDinner('Mom')
-    expect(screen.getByRole('article').getAttribute('data-learner')).toBe('true')
-    expect(screen.getByText('Your line')).toBeTruthy()
+  it('shows characters with pinyin above each word, and keeps the English hidden until asked', async () => {
+    await start('Family dinner', 'Kid')
+    await waitFor(() => expect(status()).toMatch(/listening/i))
+    const line = screen.getByRole('article')
+    expect(Array.from(line.querySelectorAll('ruby'), (r) => r.firstChild?.textContent).join('')).toBe(
+      dinner.lines[1]!.hanzi,
+    )
+    expect(line.querySelector('rt')?.textContent).toBe('mā')
+    expect(within(line).queryByText(dinner.lines[1]!.english)).toBeNull()
+  })
+
+  it('judges the spoken line and shows the verdict', async () => {
+    const { provider, user } = await start('Family dinner', 'Kid')
+    await waitFor(() => expect(provider.listening).toBe(true))
+    provider.hear(dinner.lines[1]!.hanzi)
+    await waitFor(() => expect(status()).toMatch(/Passed/))
+    expect(status()).toContain(dinner.lines[1]!.hanzi)
+    await user.click(screen.getByRole('button', { name: 'Next line' }))
+    await waitFor(() => expect(screen.getByText('Line 4 of 10')).toBeTruthy())
+  })
+
+  it('offers "it misheard me" (nothing logged) and flipping the verdict', async () => {
+    const { provider, user } = await start('Family dinner', 'Kid')
+    await waitFor(() => expect(provider.listening).toBe(true))
+    provider.hear('我不知道')
+    await waitFor(() => expect(status()).toMatch(/Not yet/))
+    await user.click(screen.getByRole('button', { name: 'Flip verdict' }))
+    expect(status()).toMatch(/Passed/)
+    expect(status()).toMatch(/your call/i)
+    await user.click(screen.getByRole('button', { name: 'Flip verdict' }))
+    expect(status()).toMatch(/Not yet/)
+    await user.click(screen.getByRole('button', { name: 'It misheard me' }))
+    await waitFor(() => expect(provider.listenCount).toBe(2))
+    await waitFor(() => expect(status()).toMatch(/listening/i))
+  })
+
+  it('counts hints per line: meaning, slower and replay', async () => {
+    const { provider, user } = await start('Family dinner', 'Kid')
+    await waitFor(() => expect(provider.listening).toBe(true))
+    await user.click(screen.getByRole('button', { name: 'Show meaning' }))
+    expect(screen.getByText(dinner.lines[1]!.english)).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: 'Play slower' }))
+    await waitFor(() => expect(provider.spoken.at(-1)!.rate).toBeLessThan(1))
+    await user.click(screen.getByRole('button', { name: 'Replay' }))
+    await waitFor(() => expect(provider.spoken.at(-1)!.rate).toBe(1))
+    expect(screen.getByText('Hints on this line: meaning 1, slower 1, replay 1')).toBeTruthy()
+  })
+
+  it('ends with the lines passed and the hints used', async () => {
+    const provider = new FakeSpeechProvider({ heard: learnerHanzi(dinner, 'kid') })
+    const { user } = await start('Family dinner', 'Kid', provider)
+    for (let i = 0; i < 5; i++) {
+      await user.click(await screen.findByRole('button', { name: 'Next line' }))
+    }
+    expect(await screen.findByRole('heading', { name: 'Take complete' })).toBeTruthy()
+    expect(screen.getByText('Lines passed: 5 of 5')).toBeTruthy()
+    expect(screen.getByText('Hints used: meaning 0, slower 0, replay 0')).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: 'Play again' }))
+    await waitFor(() => expect(screen.getByText('Line 2 of 10')).toBeTruthy())
+  })
+})
+
+describe('without speech recognition', () => {
+  it('lets the learner type their line and says why', async () => {
+    const provider = new FakeSpeechProvider({ canRecognize: false })
+    const { user } = await start('Family dinner', 'Kid', provider)
+    const box = await screen.findByRole('textbox', { name: 'Type your line' })
+    expect(screen.getByText(/speech recognition isn't available/i)).toBeTruthy()
+    await user.type(box, dinner.lines[1]!.hanzi)
+    await user.click(screen.getByRole('button', { name: 'Check my line' }))
+    await waitFor(() => expect(status()).toMatch(/Passed/))
+    expect(provider.listenCount).toBe(0)
   })
 })
