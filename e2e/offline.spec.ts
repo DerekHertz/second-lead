@@ -19,7 +19,9 @@ test('the app loads offline after a first visit', async ({ page, context }) => {
   await page.reload()
 
   await expect(page.getByRole('heading', { name: 'Pick a scene' })).toBeVisible()
-  await page.getByRole('button', { name: 'Taxi' }).click()
+  await page.getByRole('button', { name: 'Taxi to the train station' }).click()
   await page.getByRole('button', { name: 'Passenger' }).click()
-  await expect(page.getByText('Driver, to the airport please.')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Taxi to the train station' })).toBeVisible()
+  await expect(page.getByText('You play Passenger.')).toBeVisible()
+  await expect(page.getByRole('status')).toBeVisible()
 })

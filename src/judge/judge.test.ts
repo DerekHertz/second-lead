@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import family from '../../content/scenes/family-dinner.json'
 import taxi from '../../content/scenes/taxi.json'
-import { fixtureScenes } from '../fixtureScenes'
+import { starterScenes } from '../scenes'
 import { PASS_THRESHOLD, flipVerdict, judgeLine, settleAttempt } from './judge'
 
 // A 12-syllable line assembled from the family-dinner scene (no final particle).
@@ -243,14 +243,14 @@ describe('Pass: the starter scenes', () => {
 })
 
 describe('Pass: every scripted line said as written, authored pinyin or not', () => {
-  const fixtureLines = fixtureScenes.flatMap((s) =>
+  const wordFormLines = starterScenes.flatMap((s) =>
     s.lines.map((l, i) => ({
-      id: `${s.id}-${i + 1}`,
+      id: `words-${s.id}-${i + 1}`,
       hanzi: l.words.map((w) => w.hanzi).join(''),
       pinyin: l.words.map((w) => w.pinyin).join(' '),
     })),
   )
-  const all = [...taxi.lines, ...family.lines, ...fixtureLines]
+  const all = [...taxi.lines, ...family.lines, ...wordFormLines]
 
   it.each(all.map((l) => [l.id, l] as const))('%s: its characters against its own authored pinyin', (_id, line) => {
     const verdict = judgeLine({ hanzi: line.hanzi, pinyin: line.pinyin }, line.hanzi)
