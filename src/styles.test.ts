@@ -1,9 +1,13 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import css from './styles.css?raw'
+
+// Read from disk: Vitest does not hand stylesheets to tests, even as raw text.
+const css = readFileSync(join(import.meta.dirname, 'styles.css'), 'utf8')
 
 const sources = import.meta.glob<string>(['./**/*.tsx', '!./**/*.test.tsx'], { query: '?raw', import: 'default', eager: true })
 
-// A color written out: #abc, #aabbcc(dd), rgb()/rgba()/hsl()/hsla(), or a named color in a style.
+// A color written out: #abc, #aabbcc(dd), or rgb()/rgba()/hsl()/hsla().
 const COLOR = /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?)\(/gi
 
 /** The `:root { ... }` blocks, wherever they sit (top level or inside a media query). */
@@ -15,6 +19,7 @@ const tokens = (block: string) => new Set([...block.matchAll(/(--[\w-]+)\s*:/g)]
 
 describe('design tokens', () => {
   it('writes every color as a token on :root, and nowhere else', () => {
+    expect(Object.keys(sources).length).toBeGreaterThan(3)
     const outside = css.replace(/:root\s*\{[^}]*\}/g, '')
     expect(outside.match(COLOR) ?? []).toEqual([])
     for (const [file, source] of Object.entries(sources)) {

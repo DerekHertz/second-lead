@@ -1,49 +1,51 @@
 import { useMemo, useState } from 'react'
-import type { Role, Scene } from './scene'
+import { Packet } from './packet/Packet'
+import { Shelf, type Played } from './packet/Shelf'
+import type { Role, Scene, SupportLevel } from './scene'
 import { starterScenes } from './scenes'
 import { createBrowserSpeech } from './speech/browser'
 import type { SpeechProvider } from './speech/provider'
-import { TakeView } from './take/TakeView'
 
-export default function App({ scenes = starterScenes, speech }: { scenes?: Scene[]; speech?: SpeechProvider }) {
-  const [scene, setScene] = useState<Scene | null>(null)
-  const [role, setRole] = useState<Role | null>(null)
+/** Until support levels are computed from past attempts (#5), every line has full support. */
+const fullSupport = (scene: Scene): SupportLevel[] => scene.lines.map(() => 0)
+
+type Props = {
+  scenes?: Scene[]
+  speech?: SpeechProvider
+  /** Each line's support level for a learner playing `roleId`. */
+  support?: (scene: Scene, roleId: string) => SupportLevel[]
+}
+
+export default function App({ scenes = starterScenes, speech, support = fullSupport }: Props) {
+  const [open, setOpen] = useState<{ scene: Scene; resumeAs: Role | null } | null>(null)
+  const [played, setPlayed] = useState<Record<string, string>>({})
+  const [last, setLast] = useState<Played | null>(null)
   const provider = useMemo(() => speech ?? createBrowserSpeech(), [speech])
 
-  const backToScenes = () => {
-    setScene(null)
-    setRole(null)
-  }
-
   return (
-    <main style={{ maxWidth: '40rem', margin: '0 auto', padding: '1rem', fontFamily: 'sans-serif' }}>
-      {!scene && (
-        <section>
-          <h1>Pick a scene</h1>
-          <ul>
-            {scenes.map((s) => (
-              <li key={s.id}>
-                <button onClick={() => setScene(s)}>{s.title}</button>
-              </li>
-            ))}
-          </ul>
-        </section>
+    <main className="app">
+      {open ? (
+        <Packet
+          scene={open.scene}
+          speech={provider}
+          support={support}
+          resumeAs={open.resumeAs}
+          onBegin={(role) => {
+            setPlayed({ ...played, [open.scene.id]: role.id })
+            setLast({ scene: open.scene, roleId: role.id })
+          }}
+          onBack={() => setOpen(null)}
+        />
+      ) : (
+        <Shelf
+          scenes={scenes}
+          played={played}
+          last={last}
+          support={support}
+          onOpen={(scene) => setOpen({ scene, resumeAs: null })}
+          onContinue={({ scene, roleId }) => setOpen({ scene, resumeAs: scene.roles.find((r) => r.id === roleId) ?? null })}
+        />
       )}
-      {scene && !role && (
-        <section>
-          <h1>Pick your role</h1>
-          <p>{scene.title}</p>
-          <ul>
-            {scene.roles.map((r) => (
-              <li key={r.id}>
-                <button onClick={() => setRole(r)}>{r.name}</button>
-              </li>
-            ))}
-          </ul>
-          <button onClick={backToScenes}>Back to scenes</button>
-        </section>
-      )}
-      {scene && role && <TakeView scene={scene} role={role} speech={provider} onBack={backToScenes} />}
     </main>
   )
 }

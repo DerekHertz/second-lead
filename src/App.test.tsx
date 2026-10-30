@@ -156,7 +156,7 @@ describe('support levels', () => {
     expect(within(now).getByRole('button', { name: 'Show the meaning (a hint)' })).toBeTruthy()
     expect(shown(now)).not.toContain(dinner.lines[1]!.english)
     expect(shown(now)).toContain('mā')
-    expect(shown(now)).toContain('我已经')
+    expect(shown(now)).toContain('已经')
   })
 
   it('level 2 covers the characters and pinyin, leaving the English', async () => {
@@ -166,7 +166,7 @@ describe('support levels', () => {
     expect(within(now).getByRole('button', { name: 'Show the words (a hint)' })).toBeTruthy()
     expect(shown(now)).toContain(dinner.lines[1]!.english)
     expect(shown(now)).not.toContain('mā')
-    expect(shown(now)).not.toContain('我已经')
+    expect(shown(now)).not.toContain('已经')
   })
 
   it('level 3 covers the whole line with a slip that shows one tick per syllable', async () => {
@@ -175,9 +175,9 @@ describe('support levels', () => {
     const now = currentLine()
     const slip = within(now).getByRole('button', { name: 'Show the line (a hint)' })
     expect(shown(now)).not.toContain(dinner.lines[1]!.english)
-    expect(shown(now)).not.toContain('我已经')
-    // mā, wǒ yǐjīng chī le hěn duō le: eight syllables
-    expect(slip.querySelectorAll('[data-tick]')).toHaveLength(8)
+    expect(shown(now)).not.toContain('已经')
+    // mā, wǒ yǐjīng chī le hěn duō le: nine syllables
+    expect(slip.querySelectorAll('[data-tick]')).toHaveLength(9)
   })
 
   it('lifting a slip shows what was under it and records a meaning hint', async () => {

@@ -13,7 +13,9 @@ const status = (page: Page) => page.getByRole('status')
 // Screenshots for the user's visual verdict, written only when SCREENSHOT_DIR is set.
 async function shot(page: Page, name: string) {
   const dir = process.env.SCREENSHOT_DIR
-  if (dir) await page.screenshot({ path: join(dir, name) })
+  if (!dir) return
+  await page.waitForTimeout(1000) // let flips, scrolls and pencil marks settle
+  await page.screenshot({ path: join(dir, name) })
 }
 
 /** The page scrolls sideways when its content is wider than the window. */

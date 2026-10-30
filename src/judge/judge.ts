@@ -118,6 +118,26 @@ export function judgeLine(expected: ExpectedLine, heardText: string): Verdict {
   }
 }
 
+/** What the pencil marks on a judged line: the expected syllables not heard, and the tones heard right. */
+export type LineMarks = { missed: number[]; tones: { right: number; of: number } }
+
+/**
+ * The marks for a line: which of its syllables (by place, from the start of the line) were not
+ * heard, and how many of the toned syllables heard were said in the right tone.
+ */
+export function lineMarks(expected: ExpectedLine, heardText: string): LineMarks {
+  const want = withoutTrailingParticles(expectedSyllables(expected))
+  const got = withoutTrailingParticles(syllablesFromHanzi(heardText))
+  const { matched } = align(want, got)
+  const heard = new Set(matched.map((p) => p.expected))
+  const scored = matched.filter((p) => want[p.expected]!.tone !== 0)
+  const right = scored.filter((p) => toneRight(want[p.expected]!, got[p.heard]!, want[p.expected + 1]))
+  return {
+    missed: want.map((_, i) => i).filter((i) => !heard.has(i)),
+    tones: { right: right.length, of: scored.length },
+  }
+}
+
 /** The learner flips a verdict either way: it stands as their own call, not the matcher's. */
 export function flipVerdict(verdict: Verdict): Verdict {
   return { ...verdict, passed: !verdict.passed, judged_by: 'self' }
