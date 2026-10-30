@@ -124,8 +124,8 @@ describe('the checks bite', () => {
   });
   test('yī before a 3rd tone (sandhi) is flagged', () => {
     assert.ok(flagged(mutate((s) => {
-      assert.match(s.lines[2].pinyin, /yì diǎnr/);
-      s.lines[2].pinyin = s.lines[2].pinyin.replace('yì diǎnr', 'yī diǎnr');
+      assert.match(s.lines[2].pinyin, /yìdiǎnr/);
+      s.lines[2].pinyin = s.lines[2].pinyin.replace('yìdiǎnr', 'yīdiǎnr');
     }), 'pinyin'));
   });
   test('a syllable count that differs from the Han count is flagged', () => {
@@ -147,6 +147,12 @@ describe('the checks bite', () => {
   test('a branch without a steer-back is flagged', () => {
     assert.ok(flagged(mutate((s) => { delete firstOther(s).variations.branch.steerBack; }), 'branch'));
   });
+  test('a branch whose first detour line repeats the original line is flagged', () => {
+    assert.ok(flagged(mutate((s) => {
+      const l = firstOther(s);
+      l.variations.branch.detour[0] = { character: l.character, hanzi: l.hanzi, pinyin: l.pinyin, english: l.english };
+    }), 'branch'));
+  });
   test('variations on a learner line are flagged', () => {
     assert.ok(flagged(mutate((s) => { s.lines[1].variations = {}; }), 'variations'));
   });
@@ -163,8 +169,8 @@ describe('the checks bite', () => {
     assert.ok(flagged(mutate((s) => { s.characters.push({ id: 'dad', name: 'Dad' }); }), 'characters'));
   });
   test('bú before a 4th tone and erhua are read correctly', () => {
-    assert.deepEqual(analyzePinyin('bú shì nǎr, yì diǎnr').problems, []);
-    assert.equal(analyzePinyin('bú shì nǎr, yì diǎnr').tokens.length, 7);
+    assert.deepEqual(analyzePinyin('bú shì nǎr, yìdiǎnr').problems, []);
+    assert.equal(analyzePinyin('bú shì nǎr, yìdiǎnr').tokens.length, 7);
     assert.notDeepEqual(analyzePinyin('ni3 hao3').problems, []);
   });
 });

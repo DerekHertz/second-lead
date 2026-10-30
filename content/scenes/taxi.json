@@ -85,9 +85,9 @@
           "pinyin": "jiǔ diǎn le? zhège shíhou chē hěn duō, yào sìshí fēnzhōng.",
           "english": "Nine already? There are lots of cars at this time, it'll take forty minutes.",
           "reply": {
-            "hanzi": "四十分钟？那太慢了！师傅，能快一点儿吗？我的火车不等人。",
-            "pinyin": "sìshí fēnzhōng? nà tài màn le! shīfu, néng kuài yìdiǎnr ma? wǒ de huǒchē bù děng rén.",
-            "english": "Forty minutes? That's too slow! Driver, can you go a bit faster? My train won't wait for anyone."
+            "hanzi": "四十分钟？那太慢了！师傅，能快一点儿吗？火车不会等我。",
+            "pinyin": "sìshí fēnzhōng? nà tài màn le! shīfu, néng kuài yìdiǎnr ma? huǒchē bú huì děng wǒ.",
+            "english": "Forty minutes? That's too slow! Driver, can you go a bit faster? The train won't wait for me."
           }
         },
         "branch": {
@@ -118,9 +118,9 @@
       "id": "taxi-4",
       "character": "passenger",
       "position": 4,
-      "hanzi": "太好了！能快一点儿吗？我的火车不等人。",
-      "pinyin": "tài hǎo le! néng kuài yìdiǎnr ma? wǒ de huǒchē bù děng rén.",
-      "english": "Great! Can you go a bit faster? My train won't wait for anyone."
+      "hanzi": "太好了！能快一点儿吗？火车不会等我。",
+      "pinyin": "tài hǎo le! néng kuài yìdiǎnr ma? huǒchē bú huì děng wǒ.",
+      "english": "Great! Can you go a bit faster? The train won't wait for me."
     },
     {
       "id": "taxi-5",
@@ -183,44 +183,44 @@
       "character": "driver",
       "position": 7,
       "hanzi": "火车站有两个门，您去哪个门？",
-      "pinyin": "huǒchēzhàn yǒu liǎng ge mén, nín qù nǎ ge mén?",
+      "pinyin": "huǒchēzhàn yǒu liǎng ge mén, nín qù nǎge mén?",
       "english": "The station has two gates. Which gate are you going to?",
       "variations": {
         "paraphrase": {
           "hanzi": "您在哪个门下车？火车站有两个门。",
-          "pinyin": "nín zài nǎ ge mén xiàchē? huǒchēzhàn yǒu liǎng ge mén.",
+          "pinyin": "nín zài nǎge mén xiàchē? huǒchēzhàn yǒu liǎng ge mén.",
           "english": "Which gate do you want to get out at? The station has two gates."
         },
         "swap": {
-          "changes": "question: which gate you are going to becomes which gate your friend is waiting at",
-          "hanzi": "火车站有两个门，您的朋友在哪个门等您？",
-          "pinyin": "huǒchēzhàn yǒu liǎng ge mén, nín de péngyou zài nǎ ge mén děng nín?",
-          "english": "The station has two gates. Which gate is your friend waiting at?",
+          "changes": "question: 'which gate' becomes a choice between the east gate and the west gate",
+          "hanzi": "火车站有两个门，您去东门还是西门？",
+          "pinyin": "huǒchēzhàn yǒu liǎng ge mén, nín qù dōngmén háishi xīmén?",
+          "english": "The station has two gates. Are you going to the east gate or the west gate?",
           "reply": {
-            "hanzi": "他在东门等我。",
-            "pinyin": "tā zài dōngmén děng wǒ.",
-            "english": "He's waiting for me at the east gate."
+            "hanzi": "东门。我朋友在那儿等我。",
+            "pinyin": "dōngmén. wǒ péngyou zài nàr děng wǒ.",
+            "english": "The east gate. My friend is waiting for me there."
           }
         },
         "branch": {
           "detour": [
             {
               "character": "driver",
-              "hanzi": "您的朋友也坐火车吗？",
-              "pinyin": "nín de péngyou yě zuò huǒchē ma?",
-              "english": "Is your friend taking the train too?"
+              "hanzi": "您一个人坐火车吗？",
+              "pinyin": "nín yí ge rén zuò huǒchē ma?",
+              "english": "Are you taking the train on your own?"
             },
             {
               "character": "passenger",
-              "hanzi": "对，我们一起去北京。",
-              "pinyin": "duì, wǒmen yìqǐ qù běijīng.",
-              "english": "Yes, we're going to Beijing together."
+              "hanzi": "不是，我和朋友一起去北京。",
+              "pinyin": "bú shì, wǒ hé péngyou yìqǐ qù běijīng.",
+              "english": "No, I'm going to Beijing with a friend."
             }
           ],
           "steerBack": {
             "character": "driver",
             "hanzi": "好。火车站有两个门，您去哪个门？",
-            "pinyin": "hǎo. huǒchēzhàn yǒu liǎng ge mén, nín qù nǎ ge mén?",
+            "pinyin": "hǎo. huǒchēzhàn yǒu liǎng ge mén, nín qù nǎge mén?",
             "english": "Good. The station has two gates. Which gate are you going to?"
           }
         }
