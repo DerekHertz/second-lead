@@ -80,42 +80,58 @@ function toneRight(expected: Syllable, heard: Syllable, next: Syllable | undefin
   return expected.tone === 2 && heard.tone === 3 && next?.tone === 3
 }
 
-/** The share of matched syllables said in the right tone; a neutral tone is not held against anyone. */
-function toneScore(expected: Syllable[], heard: Syllable[], matched: Pair[]): number {
-  if (matched.length === 0) return 0
-  const scored = matched.filter((p) => expected[p.expected]!.tone !== 0)
-  if (scored.length === 0) return 1
-  const right = scored.filter((p) => toneRight(expected[p.expected]!, heard[p.heard]!, expected[p.expected + 1]))
-  return right.length / scored.length
-}
-
 function expectedSyllables(line: ExpectedLine): Syllable[] {
   const authored = line.pinyin?.trim() ? syllablesFromPinyin(line.pinyin) : null
   return authored ?? syllablesFromHanzi(line.hanzi)
 }
 
 /**
- * Judge what speech recognition heard against the expected line. Both sides become toneless
- * pinyin syllables (punctuation, spaces, digits and Latin letters are dropped, a final particle
- * and the erhua 儿 are optional), are aligned, and pass when the match reaches PASS_THRESHOLD.
- * The tone score is reported alongside and never decides the pass.
+ * The line and what was heard as toneless pinyin syllables (punctuation, spaces, digits and Latin
+ * letters are dropped, a final particle and the erhua 儿 are optional), aligned, with the toned
+ * syllables matched and how many of those were said in the right tone.
  */
-export function judgeLine(expected: ExpectedLine, heardText: string): Verdict {
+function compare(expected: ExpectedLine, heardText: string) {
   const want = withoutTrailingParticles(expectedSyllables(expected))
   const got = withoutTrailingParticles(syllablesFromHanzi(heardText))
+  const { errors, matched } = align(want, got)
+  // A neutral tone is not held against anyone.
+  const scored = matched.filter((p) => want[p.expected]!.tone !== 0)
+  const right = scored.filter((p) => toneRight(want[p.expected]!, got[p.heard]!, want[p.expected + 1])).length
+  return { want, got, errors, matched, tones: { right, of: scored.length } }
+}
+
+/**
+ * Judge what speech recognition heard against the expected line: the syllables are aligned, and
+ * the line passes when the match reaches PASS_THRESHOLD. The tone score (the share of matched
+ * syllables said in the right tone) is reported alongside and never decides the pass.
+ */
+export function judgeLine(expected: ExpectedLine, heardText: string): Verdict {
+  const { want, got, errors, matched, tones } = compare(expected, heardText)
   if (want.length === 0 || got.length === 0) {
     return { heard_text: heardText, syllable_match: 0, tone_score: 0, passed: false, judged_by: 'match' }
   }
   const longest = Math.max(want.length, got.length)
-  const { errors, matched } = align(want, got)
   const syllable_match = (longest - errors) / longest
   return {
     heard_text: heardText,
     syllable_match,
-    tone_score: toneScore(want, got, matched),
+    tone_score: matched.length === 0 ? 0 : tones.of === 0 ? 1 : tones.right / tones.of,
     passed: syllable_match >= PASS_THRESHOLD,
     judged_by: 'match',
   }
+}
+
+/** What the pencil marks on a judged line: the expected syllables not heard, and the tones heard right. */
+export type LineMarks = { missed: number[]; tones: { right: number; of: number } }
+
+/**
+ * The marks for a line: which of its syllables (by place, from the start of the line) were not
+ * heard, and how many of the toned syllables heard were said in the right tone.
+ */
+export function lineMarks(expected: ExpectedLine, heardText: string): LineMarks {
+  const { want, matched, tones } = compare(expected, heardText)
+  const heard = new Set(matched.map((p) => p.expected))
+  return { missed: want.map((_, i) => i).filter((i) => !heard.has(i)), tones }
 }
 
 /** The learner flips a verdict either way: it stands as their own call, not the matcher's. */

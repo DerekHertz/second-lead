@@ -1,46 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, test, type Page } from '@playwright/test'
-
-// Headless Chromium cannot run real speech recognition or voices, so these tests replace the
-// browser's Web Speech API (the platform, not the app) before the app loads. The app's own
-// browser provider runs unchanged on top of it. `__hear(text)` plays the learner speaking;
-// `__spoken` records everything the app asked the browser to say.
-function installFakeSpeech({ recognition }: { recognition: boolean }) {
-  const w = window as unknown as Record<string, any>
-  w.__spoken = []
-  Object.defineProperty(window, 'speechSynthesis', {
-    configurable: true,
-    value: {
-      speak(u: { text: string; rate: number; lang: string; onend?: () => void }) {
-        w.__spoken.push({ text: u.text, rate: u.rate, lang: u.lang })
-        setTimeout(() => u.onend?.(), 5)
-      },
-      cancel() {},
-    },
-  })
-  class FakeRecognition {
-    lang = ''
-    onresult: ((e: unknown) => void) | null = null
-    onerror: ((e: unknown) => void) | null = null
-    onend: (() => void) | null = null
-    start() {
-      w.__recognizer = this
-    }
-    abort() {
-      if (w.__recognizer === this) w.__recognizer = null
-      this.onend?.()
-    }
-  }
-  w.webkitSpeechRecognition = recognition ? FakeRecognition : undefined
-  w.SpeechRecognition = undefined
-  w.__hear = (text: string) => {
-    const r = w.__recognizer
-    w.__recognizer = null
-    r.onresult({ results: [[{ transcript: text }]] })
-    r.onend()
-  }
-}
+import { installFakeSpeech } from './fake-speech'
 
 type Spoken = { text: string; rate: number; lang: string }
 type SceneFile = { lines: { character: string; hanzi: string; english: string }[] }
@@ -53,6 +14,7 @@ async function open(page: Page, title: string, role: string, recognition = true)
   await page.goto('/')
   await page.getByRole('button', { name: title }).click()
   await page.getByRole('button', { name: role }).click()
+  await page.getByRole('button', { name: 'Begin' }).click()
 }
 
 const status = (page: Page) => page.getByRole('status')
@@ -69,7 +31,7 @@ async function shot(page: Page, name: string) {
 async function playThrough(page: Page, file: SceneFile, learner: string) {
   const mine = file.lines.filter((l) => l.character === learner)
   for (const line of mine) {
-    await expect(status(page)).toContainText('Listening')
+    await expect(status(page)).toContainText('your cue')
     await hear(page, line.hanzi)
     await expect(status(page)).toContainText('Passed')
     await page.getByRole('button', { name: 'Next line' }).click()
@@ -81,7 +43,7 @@ test('a take of the family dinner: Mom is spoken aloud, the learner answers by v
   await open(page, 'Family dinner', 'Kid')
   const file = scene('family-dinner')
 
-  await expect(status(page)).toContainText('Listening')
+  await expect(status(page)).toContainText('your cue')
   await shot(page, 't4-listening.png')
   expect((await spoken(page))[0]).toMatchObject({ text: file.lines[0]!.hanzi, lang: 'zh-CN', rate: 1 })
 
@@ -89,8 +51,8 @@ test('a take of the family dinner: Mom is spoken aloud, the learner answers by v
   await expect(status(page)).toContainText('Passed')
   await shot(page, 't4-verdict.png')
   await page.getByRole('button', { name: 'Next line' }).click()
-  await expect(page.getByText('Line 4 of 10')).toBeVisible()
-  await expect(status(page)).toContainText('Listening')
+  await expect(page.locator('article[aria-current="true"]')).toContainText(file.lines[3]!.english)
+  await expect(status(page)).toContainText('your cue')
 
   // the other character's lines were all spoken, in order
   const heardSoFar = (await spoken(page)).map((s) => s.text)
@@ -101,34 +63,45 @@ test('a whole take of each starter scene ends with a summary', async ({ page }) 
   await open(page, 'Family dinner', 'Kid')
   const dinner = scene('family-dinner')
   const n = await playThrough(page, dinner, 'kid')
-  await expect(page.getByRole('heading', { name: 'Take complete' })).toBeVisible()
-  await expect(page.getByText(`Lines passed: ${n} of ${n}`)).toBeVisible()
+  await expect(page.getByText('— 完 —')).toBeVisible()
+  await page.getByRole('button', { name: 'solid' }).click()
+  await expect(page.getByRole('region', { name: 'This take' })).toContainText(`${n} of ${n}`)
   expect((await spoken(page)).map((s) => s.text)).toEqual(dinner.lines.filter((l) => l.character === 'mom').map((l) => l.hanzi))
 
-  await page.getByRole('button', { name: 'Back to scenes' }).click()
+  await page.getByRole('button', { name: 'Back to shelf' }).click()
   await page.getByRole('button', { name: 'Taxi to the train station' }).click()
   await page.getByRole('button', { name: 'Passenger' }).click()
+  await page.getByRole('button', { name: 'Begin' }).click()
   const taxi = scene('taxi')
   const m = await playThrough(page, taxi, 'passenger')
-  await expect(page.getByText(`Lines passed: ${m} of ${m}`)).toBeVisible()
+  await page.getByRole('button', { name: 'Skip' }).click()
+  await expect(page.getByRole('region', { name: 'This take' })).toContainText(`${m} of ${m}`)
   expect((await spoken(page)).map((s) => s.text)).toEqual(
     [...dinner.lines.filter((l) => l.character === 'mom'), ...taxi.lines.filter((l) => l.character === 'driver')].map((l) => l.hanzi),
   )
 })
 
-test('hints are one tap away and counted per line; a miss can be flipped or retried', async ({ page }) => {
+test('hints are one tap away and counted; a miss can be flipped or retried', async ({ page }) => {
   await open(page, 'Family dinner', 'Kid')
   const file = scene('family-dinner')
-  await expect(status(page)).toContainText('Listening')
+  await expect(status(page)).toContainText('your cue')
 
-  await expect(page.getByText(file.lines[1]!.english)).toHaveCount(0)
-  await page.getByRole('button', { name: 'Show meaning' }).click()
-  await expect(page.getByText(file.lines[1]!.english)).toBeVisible()
+  // less help puts a slip over the meaning; lifting it is a hint
+  await page.getByRole('button', { name: 'Take menu' }).click()
+  await page.getByRole('button', { name: 'Less help' }).click()
+  await page.getByRole('button', { name: 'Close' }).click()
+  const now = page.locator('article[aria-current="true"]')
+  const slip = now.getByRole('button', { name: 'Show the meaning (a hint)' })
+  await slip.click()
+  await expect(slip).toHaveCount(0)
+  await expect(now.getByText(file.lines[1]!.english)).toBeVisible()
+  await expect(page.getByText('Hints used: 1')).toBeAttached()
+
   await page.getByRole('button', { name: 'Play slower' }).click()
-  await expect(status(page)).toContainText('Listening')
+  await expect(status(page)).toContainText('your cue')
   await page.getByRole('button', { name: 'Replay' }).click()
-  await expect(status(page)).toContainText('Listening')
-  await expect(page.getByText('Hints on this line: meaning 1, slower 1, replay 1')).toBeVisible()
+  await expect(status(page)).toContainText('your cue')
+  await expect(page.getByText('Hints used: 3')).toBeAttached()
   const audio = await spoken(page)
   expect(audio.at(-2)!.rate).toBeCloseTo(0.6, 5) // the utterance stores rate as a float32
   expect(audio.at(-1)!.rate).toBe(1)
@@ -138,12 +111,12 @@ test('hints are one tap away and counted per line; a miss can be flipped or retr
   // a miss: flip it to a pass, flip back, then say it was misheard and try again
   await hear(page, '我不知道')
   await expect(status(page)).toContainText('Not yet')
-  await page.getByRole('button', { name: 'Flip verdict' }).click()
+  await page.getByRole('button', { name: 'I said it right' }).click()
   await expect(status(page)).toContainText('Passed (your call)')
-  await page.getByRole('button', { name: 'Flip verdict' }).click()
+  await page.getByRole('button', { name: "That wasn't right" }).click()
   await expect(status(page)).toContainText('Not yet')
   await page.getByRole('button', { name: 'It misheard me' }).click()
-  await expect(status(page)).toContainText('Listening')
+  await expect(status(page)).toContainText('your cue')
   await hear(page, file.lines[1]!.hanzi)
   await expect(status(page)).toContainText('Passed')
 })

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import family from '../../content/scenes/family-dinner.json'
 import taxi from '../../content/scenes/taxi.json'
 import { starterScenes } from '../scenes'
-import { PASS_THRESHOLD, flipVerdict, judgeLine, settleAttempt } from './judge'
+import { PASS_THRESHOLD, flipVerdict, judgeLine, lineMarks, settleAttempt } from './judge'
 
 // A 12-syllable line assembled from the family-dinner scene (no final particle).
 const LONG = '我天天都好好吃饭妈你别说'
@@ -391,5 +391,23 @@ describe('Overrides: settling an attempt', () => {
     const attempt = settleAttempt(verdict, 'flip')
     expect(attempt).toEqual(flipVerdict(verdict))
     expect(attempt?.judged_by).toBe('self')
+  })
+})
+
+describe('Pencil marks: which syllables were missed, and how the tones went', () => {
+  const kid = { hanzi: '妈，我已经吃了很多了。', pinyin: 'mā, wǒ yǐjīng chī le hěn duō le.' }
+
+  it('marks nothing missed when the whole line was said', () => {
+    expect(lineMarks(kid, '妈，我已经吃了很多了').missed).toEqual([])
+  })
+
+  it('names the expected syllables that were not heard, by their place in the line', () => {
+    // mā wǒ yǐ jīng chī le hěn duō: only mā, hěn and duō were said
+    expect(lineMarks(kid, '妈很多了').missed).toEqual([1, 2, 3, 4, 5])
+  })
+
+  it('counts the tones said right among the toned syllables heard', () => {
+    // 麻 (má) for 妈 (mā): the sound matches, the tone does not
+    expect(lineMarks({ hanzi: '妈很多' }, '麻很多').tones).toEqual({ right: 2, of: 3 })
   })
 })

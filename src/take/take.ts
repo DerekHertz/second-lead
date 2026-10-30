@@ -13,7 +13,7 @@ export type TakeAttempt = { lineIndex: number; verdict: Verdict }
  * Where a take is:
  * - speaking: another character's line is being said aloud
  * - listening / typing: waiting for the learner's line, by voice or by keyboard
- * - no-input: listening ended with nothing (or failed); the learner may listen again
+ * - no-input: not listening (nothing heard, paused, or waiting for the cue); the learner may listen again
  * - playing: a Hint's audio is playing over the learner's line
  * - reviewing: the verdict is shown and the learner decides what to do with it
  */
@@ -37,6 +37,9 @@ export type TakeState = {
   /** A passing remark about what just happened (nothing heard, audio failed). */
   notice: string | null
 }
+
+/** `autoCue` (default on): open the microphone by itself when the learner's line comes. */
+export type TakeOptions = { scene: Scene; roleId: string; provider: SpeechProvider; autoCue?: boolean }
 
 export type Resumable = 'listening' | 'typing' | 'no-input' | 'reviewing'
 
@@ -65,8 +68,10 @@ export class Take {
   private original: Verdict | null = null
   private flipped = false
   private resume: Resumable | null = null
+  private autoCue: boolean
 
-  constructor(private readonly options: { scene: Scene; roleId: string; provider: SpeechProvider }) {
+  constructor(private readonly options: TakeOptions) {
+    this.autoCue = options.autoCue ?? true
     const canListen = options.provider.canRecognize
     this.state = {
       phase: 'idle',
@@ -133,7 +138,19 @@ export class Take {
     this.set({ verdict: this.flipped ? flipVerdict(this.original) : this.original })
   }
 
-  /** After nothing was heard: open the microphone again. */
+  /** Stop listening on the learner's line until they ask to listen again. */
+  pause(): void {
+    if (this.state.phase !== 'listening') return
+    this.begin()
+    this.set({ phase: 'no-input', notice: null })
+  }
+
+  /** Auto-cue: open the microphone by itself on each of the learner's lines (from the next line on). */
+  setAutoCue(on: boolean): void {
+    this.autoCue = on
+  }
+
+  /** After nothing was heard, a pause, or a line waiting for its cue: open the microphone. */
   listenAgain(): void {
     if (this.state.phase !== 'no-input') return
     this.set({ notice: null })
@@ -208,7 +225,8 @@ export class Take {
       this.begin()
       this.set({ phase: 'done' })
     } else if (line.roleId === this.options.roleId) {
-      this.collect(index)
+      if (this.autoCue || this.state.input === 'typed' || !this.options.provider.canRecognize) this.collect(index)
+      else this.set({ phase: 'no-input', notice: null })
     } else {
       this.speak(index, NORMAL_RATE)
     }
@@ -295,6 +313,6 @@ export class Take {
   }
 }
 
-export function createTake(options: { scene: Scene; roleId: string; provider: SpeechProvider }): Take {
+export function createTake(options: TakeOptions): Take {
   return new Take(options)
 }
