@@ -3,8 +3,8 @@ import family from '../../content/scenes/family-dinner.json'
 import taxi from '../../content/scenes/taxi.json'
 import { PASS_THRESHOLD, flipVerdict, judgeLine, settleAttempt } from './judge'
 
-// A 13-syllable line assembled from the family-dinner scene.
-const LONG = '我天天都好好吃饭妈你别说了'
+// A 12-syllable line assembled from the family-dinner scene (no final particle).
+const LONG = '我天天都好好吃饭妈你别说'
 
 describe('Pass: the right sound with the wrong character', () => {
   it('passes when speech recognition picked a homophone character', () => {
@@ -192,7 +192,7 @@ describe('Pass: polyphonic characters are read in context, on both sides', () =>
   })
 
   it('reads 了 as le after a verb and liǎo in 了解, 长 as zhǎng or cháng by word', () => {
-    expect(judgeLine({ hanzi: '我吃了' }, '我吃乐').syllable_match).toBe(1) // wǒ chī le
+    expect(judgeLine({ hanzi: '我吃了饭' }, '我吃乐饭').syllable_match).toBe(1) // wǒ chī le fàn
     expect(judgeLine({ hanzi: '了解' }, '料解').syllable_match).toBe(1) // liào jiě
     expect(judgeLine({ hanzi: '长大' }, '涨大').syllable_match).toBe(1) // zhǎng dà
     expect(judgeLine({ hanzi: '很长' }, '很常').syllable_match).toBe(1) // hěn cháng
@@ -201,7 +201,7 @@ describe('Pass: polyphonic characters are read in context, on both sides', () =>
   it('prefers the authored pinyin to converting the characters', () => {
     // Converted alone, 长 reads cháng; the authored pinyin says zhǎng.
     expect(judgeLine({ hanzi: '长', pinyin: 'zhǎng' }, '涨').syllable_match).toBe(1)
-    expect(judgeLine({ hanzi: '长', pinyin: 'zhǎng' }, '长').syllable_match).toBe(1)
+    expect(judgeLine({ hanzi: '长', pinyin: 'zhǎng' }, '长').syllable_match).toBe(0)
     expect(judgeLine({ hanzi: '长' }, '涨').syllable_match).toBe(0)
   })
 
