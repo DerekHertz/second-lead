@@ -53,6 +53,10 @@ export function createBrowserSpeech(win: SpeechWindow = window as unknown as Spe
   const Utterance = win.SpeechSynthesisUtterance
   const Recognizer = win.SpeechRecognition ?? win.webkitSpeechRecognition
 
+  // Chrome can garbage-collect an utterance nothing refers to before its `onend` fires, and the
+  // line would then never finish. Hold each one until it ends, fails or is cancelled.
+  const speaking = new Set<Utterance>()
+
   return {
     canSynthesize: Boolean(synthesis && Utterance),
     canRecognize: Boolean(Recognizer),
@@ -64,16 +68,20 @@ export function createBrowserSpeech(win: SpeechWindow = window as unknown as Spe
         const utterance = new Utterance(text)
         utterance.lang = SPEECH_LANG
         utterance.rate = rate
+        speaking.add(utterance)
         const onAbort = () => {
+          speaking.delete(utterance)
           synthesis.cancel()
           reject(new SpeechError('aborted'))
         }
         signal?.addEventListener('abort', onAbort, { once: true })
         utterance.onend = () => {
+          speaking.delete(utterance)
           signal?.removeEventListener('abort', onAbort)
           resolve()
         }
         utterance.onerror = (event) => {
+          speaking.delete(utterance)
           signal?.removeEventListener('abort', onAbort)
           const interrupted = event.error === 'canceled' || event.error === 'interrupted'
           reject(new SpeechError(interrupted ? 'aborted' : 'failed', event.error))

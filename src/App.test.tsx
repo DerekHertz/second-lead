@@ -135,3 +135,149 @@ describe('without speech recognition', () => {
     expect(provider.listenCount).toBe(0)
   })
 })
+
+describe('leaving a take', () => {
+  it('stops the microphone when the learner goes back while listening', async () => {
+    const { provider, user } = await start('Family dinner', 'Kid')
+    await waitFor(() => expect(provider.listening).toBe(true))
+    await user.click(screen.getByRole('button', { name: 'Back to scenes' }))
+    expect(provider.listening).toBe(false)
+  })
+
+  it('stops the audio, and speaks nothing more, when the learner goes back mid-speech', async () => {
+    const provider = new FakeSpeechProvider({ holdSynthesis: true })
+    const { user } = await start('Family dinner', 'Kid', provider)
+    await waitFor(() => expect(provider.speaking).toBe(1))
+    await user.click(screen.getByRole('button', { name: 'Back to scenes' }))
+    expect(provider.speaking).toBe(0)
+    provider.finishSpeaking()
+    await new Promise((r) => setTimeout(r, 0))
+    expect(provider.spoken).toHaveLength(1)
+    expect(provider.listenCount).toBe(0)
+  })
+})
+
+describe('a steady layout', () => {
+  it('keeps room for the meaning before it is shown, so the controls do not move', async () => {
+    const { user, provider } = await start('Family dinner', 'Kid')
+    await waitFor(() => expect(provider.listening).toBe(true))
+    const slot = screen.getByTestId('meaning')
+    expect(slot.textContent).toBe('')
+    await user.click(screen.getByRole('button', { name: 'Show meaning' }))
+    expect(screen.getByTestId('meaning')).toBe(slot) // same element, now filled
+    expect(slot.textContent).toBe(dinner.lines[1]!.english)
+  })
+
+  it('keeps the listening controls in place, disabled, while a hint plays', async () => {
+    const provider = new FakeSpeechProvider({ holdSynthesis: true })
+    const { user } = await start('Family dinner', 'Kid', provider)
+    await waitFor(() => expect(provider.speaking).toBe(1))
+    provider.finishSpeaking()
+    await waitFor(() => expect(provider.listening).toBe(true))
+    await user.click(screen.getByRole('button', { name: 'Replay' }))
+    await waitFor(() => expect(status()).toMatch(/Playing/))
+    const typeInstead = screen.getByRole('button', { name: 'Type instead' }) as HTMLButtonElement
+    expect(typeInstead.disabled).toBe(true)
+    provider.finishSpeaking()
+    await waitFor(() => expect(status()).toMatch(/Listening/))
+    expect((screen.getByRole('button', { name: 'Type instead' }) as HTMLButtonElement).disabled).toBe(false)
+  })
+
+  it('keeps the verdict on screen while a hint plays over it', async () => {
+    const provider = new FakeSpeechProvider({ holdSynthesis: true })
+    const { user } = await start('Family dinner', 'Kid', provider)
+    await waitFor(() => expect(provider.speaking).toBe(1))
+    provider.finishSpeaking()
+    await waitFor(() => expect(provider.listening).toBe(true))
+    provider.hear('我不知道')
+    await waitFor(() => expect(status()).toMatch(/Not yet/))
+    await user.click(screen.getByRole('button', { name: 'Play slower' }))
+    await waitFor(() => expect(provider.speaking).toBe(1))
+    expect(status()).toMatch(/Not yet/)
+    expect(status()).toContain('我不知道')
+    expect((screen.getByRole('button', { name: 'Next line' }) as HTMLButtonElement).disabled).toBe(true)
+    provider.finishSpeaking()
+    await waitFor(() => expect((screen.getByRole('button', { name: 'Next line' }) as HTMLButtonElement).disabled).toBe(false))
+  })
+})
+
+describe('language and plain words', () => {
+  it('marks the hanzi in the verdict and in the lines so far as Chinese', async () => {
+    const { provider, user } = await start('Family dinner', 'Kid')
+    await waitFor(() => expect(provider.listening).toBe(true))
+    provider.hear(dinner.lines[1]!.hanzi)
+    await waitFor(() => expect(status()).toMatch(/Passed/))
+    expect(screen.getByRole('status').querySelector('[lang="zh-Hans"]')?.textContent).toBe(dinner.lines[1]!.hanzi)
+    await user.click(screen.getByRole('button', { name: 'Next line' }))
+    const list = await screen.findByRole('list', { name: 'Lines so far' })
+    const items = within(list).getAllByRole('listitem')
+    expect(items[0]!.querySelector('[lang="zh-Hans"]')?.textContent).toBe(dinner.lines[0]!.hanzi)
+    expect(list.getAttribute('lang')).toBeNull() // the role names are English
+  })
+
+  it('does not show the learner a raw error code', async () => {
+    const provider = new FakeSpeechProvider({ heard: [{ error: 'failed', message: 'audio-capture' }] })
+    await start('Family dinner', 'Kid', provider)
+    await waitFor(() => expect(status()).toMatch(/microphone/i))
+    expect(document.body.textContent).not.toContain('audio-capture')
+  })
+})
+
+describe('where focus goes', () => {
+  it('opens the typed input focused when the learner types instead', async () => {
+    const { provider, user } = await start('Family dinner', 'Kid')
+    await waitFor(() => expect(provider.listening).toBe(true))
+    await user.click(screen.getByRole('button', { name: 'Type instead' }))
+    const box = await screen.findByRole('textbox', { name: 'Type your line' })
+    expect(document.activeElement).toBe(box)
+  })
+
+  it('focuses the typed input when the take starts without recognition, and again on try again', async () => {
+    const provider = new FakeSpeechProvider({ canRecognize: false })
+    const { user } = await start('Family dinner', 'Kid', provider)
+    const box = await screen.findByRole('textbox', { name: 'Type your line' })
+    expect(document.activeElement).toBe(box)
+    await user.type(box, '我不知道')
+    await user.click(screen.getByRole('button', { name: 'Check my line' }))
+    await user.click(await screen.findByRole('button', { name: 'Try again' }))
+    expect(document.activeElement).toBe(await screen.findByRole('textbox', { name: 'Type your line' }))
+  })
+
+  it('moves focus to the primary action when the verdict arrives', async () => {
+    const { provider } = await start('Family dinner', 'Kid')
+    await waitFor(() => expect(provider.listening).toBe(true))
+    provider.hear(dinner.lines[1]!.hanzi)
+    const next = await screen.findByRole('button', { name: 'Next line' })
+    expect(document.activeElement).toBe(next)
+  })
+
+  it('does not lose focus to the page when the learner moves on', async () => {
+    const { provider, user } = await start('Family dinner', 'Kid')
+    await waitFor(() => expect(provider.listening).toBe(true))
+    provider.hear(dinner.lines[1]!.hanzi)
+    await user.click(await screen.findByRole('button', { name: 'Next line' }))
+    expect(document.activeElement).not.toBe(document.body)
+    expect(document.activeElement).toBe(screen.getByRole('status'))
+  })
+
+  it('focuses Listen again when nothing was heard', async () => {
+    const provider = new FakeSpeechProvider({ heard: [{ error: 'no-speech' }] })
+    await start('Family dinner', 'Kid', provider)
+    const again = await screen.findByRole('button', { name: 'Listen again' })
+    expect(document.activeElement).toBe(again)
+  })
+
+  it('leaves focus on the hint button the learner pressed', async () => {
+    const provider = new FakeSpeechProvider({ holdSynthesis: true })
+    const { user } = await start('Family dinner', 'Kid', provider)
+    await waitFor(() => expect(provider.speaking).toBe(1))
+    provider.finishSpeaking()
+    await waitFor(() => expect(provider.listening).toBe(true))
+    const replay = screen.getByRole('button', { name: 'Replay' })
+    await user.click(replay)
+    await waitFor(() => expect(provider.speaking).toBe(1))
+    provider.finishSpeaking()
+    await waitFor(() => expect(status()).toMatch(/Listening/))
+    expect(document.activeElement).toBe(replay)
+  })
+})

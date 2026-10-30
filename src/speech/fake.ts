@@ -7,12 +7,14 @@ import {
   type SynthesizeOptions,
 } from './provider'
 
-type Scripted = string | { error: SpeechErrorCode }
+type Scripted = string | { error: SpeechErrorCode; message?: string }
 
 /**
  * A scripted speech provider for tests: no microphone, no audio. `spoken` records every
  * synthesize call. Recognition answers from the `heard` queue (a string, or an error code),
- * and once that is empty waits until the test calls `hear` or `failListening`.
+ * and once that is empty waits until the test calls `hear` or `failListening`. With
+ * `holdSynthesis`, `synthesize` stays pending (audio "playing") until the test calls
+ * `finishSpeaking`; an abort ends it as a real engine would.
  */
 export class FakeSpeechProvider implements SpeechProvider {
   readonly canSynthesize: boolean
@@ -23,9 +25,12 @@ export class FakeSpeechProvider implements SpeechProvider {
   /** Whether a `recognize` call is waiting for the learner. */
   listening = false
   private readonly queue: Scripted[]
+  private readonly holdSynthesis: boolean
+  private readonly playing = new Set<() => void>()
   private pending: { resolve: (text: string) => void; reject: (error: SpeechError) => void } | null = null
 
-  constructor(options: { canSynthesize?: boolean; canRecognize?: boolean; heard?: Scripted[] } = {}) {
+  constructor(options: { canSynthesize?: boolean; canRecognize?: boolean; heard?: Scripted[]; holdSynthesis?: boolean } = {}) {
+    this.holdSynthesis = options.holdSynthesis ?? false
     this.canSynthesize = options.canSynthesize ?? true
     this.canRecognize = options.canRecognize ?? true
     this.queue = [...(options.heard ?? [])]
@@ -35,7 +40,28 @@ export class FakeSpeechProvider implements SpeechProvider {
     if (!this.canSynthesize) return Promise.reject(new SpeechError('unsupported'))
     if (options.signal?.aborted) return Promise.reject(new SpeechError('aborted'))
     this.spoken.push({ text, rate: options.rate ?? NORMAL_RATE })
-    return Promise.resolve()
+    if (!this.holdSynthesis) return Promise.resolve()
+    return new Promise<void>((resolve, reject) => {
+      const finish = () => {
+        this.playing.delete(finish)
+        resolve()
+      }
+      this.playing.add(finish)
+      options.signal?.addEventListener('abort', () => {
+        if (!this.playing.delete(finish)) return
+        reject(new SpeechError('aborted'))
+      })
+    })
+  }
+
+  /** How many synthesize calls are still playing (only with `holdSynthesis`). */
+  get speaking(): number {
+    return this.playing.size
+  }
+
+  /** The audio that is playing ends: resolves the held `synthesize` calls. */
+  finishSpeaking(): void {
+    for (const finish of [...this.playing]) finish()
   }
 
   recognize(options: RecognizeOptions = {}): Promise<string> {
@@ -44,7 +70,7 @@ export class FakeSpeechProvider implements SpeechProvider {
     if (options.signal?.aborted) return Promise.reject(new SpeechError('aborted'))
     const next = this.queue.shift()
     if (next !== undefined) {
-      return typeof next === 'string' ? Promise.resolve(next) : Promise.reject(new SpeechError(next.error))
+      return typeof next === 'string' ? Promise.resolve(next) : Promise.reject(new SpeechError(next.error, next.message))
     }
     return new Promise<string>((resolve, reject) => {
       this.listening = true

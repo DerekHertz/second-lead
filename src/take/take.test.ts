@@ -296,16 +296,119 @@ describe('a scene with no lines', () => {
   })
 })
 
+// Every line is Mom's, so a learner playing the kid hears several lines in a row.
+const allMom: Scene = { ...dinner, lines: dinner.lines.map((l) => ({ ...l, roleId: 'mom' })) }
+const held = () => new FakeSpeechProvider({ holdSynthesis: true })
+
+describe('audio in flight', () => {
+  it('a hint while the other character is speaking replaces that audio and goes on only once', async () => {
+    const { take, provider } = begin(allMom, 'kid', held())
+    await vi.waitFor(() => expect(provider.speaking).toBe(1))
+    take.hint('slower')
+    expect(provider.spoken.map((s) => s.rate)).toEqual([1, SLOW_RATE])
+    expect(provider.speaking).toBe(1) // the first was cancelled, not left playing
+    expect(take.getState().index).toBe(0)
+    provider.finishSpeaking()
+    await vi.waitFor(() => expect(take.getState().index).toBe(1))
+    // line 0 was not spoken a third time and line 1 is now the one playing
+    expect(provider.spoken.map((s) => s.text)).toEqual([allMom.lines[0]!.hanzi, allMom.lines[0]!.hanzi, allMom.lines[1]!.hanzi])
+    expect(provider.speaking).toBe(1)
+  })
+
+  it('disposing mid-speech cancels the audio and speaks nothing further', async () => {
+    const { take, provider } = begin(allMom, 'kid', held())
+    await vi.waitFor(() => expect(provider.speaking).toBe(1))
+    take.dispose()
+    expect(provider.speaking).toBe(0)
+    provider.finishSpeaking()
+    await new Promise((r) => setTimeout(r, 0))
+    expect(provider.spoken).toHaveLength(1)
+    expect(take.getState().index).toBe(0)
+  })
+
+  it('disposing while a hint plays over the learner’s line does not resume listening', async () => {
+    const provider = held()
+    const { take } = begin(dinner, 'mom', provider)
+    await until(take, 'listening')
+    take.hint('replay')
+    await until(take, 'playing')
+    take.dispose()
+    expect(provider.speaking).toBe(0)
+    provider.finishSpeaking()
+    await new Promise((r) => setTimeout(r, 0))
+    expect(provider.listenCount).toBe(1)
+  })
+
+  it('a hint from the verdict plays the line, keeps the verdict, and returns to reviewing', async () => {
+    const provider = new FakeSpeechProvider({ holdSynthesis: true, heard: ['我不知道'] })
+    const { take } = begin(dinner, 'mom', provider)
+    await until(take, 'reviewing')
+    const verdict = take.getState().verdict
+    take.flip()
+    const flipped = take.getState().verdict
+    take.hint('replay')
+    expect(take.getState().phase).toBe('playing')
+    expect(take.getState().resumeTo).toBe('reviewing')
+    expect(take.getState().verdict).toBe(flipped)
+    provider.finishSpeaking()
+    await until(take, 'reviewing')
+    expect(take.getState().resumeTo).toBeNull()
+    expect(take.getState().verdict).toBe(flipped)
+    expect(flipped).not.toBe(verdict)
+    expect(take.getState().hints[0]!.replay).toBe(1)
+    expect(provider.listenCount).toBe(1) // reviewing does not listen again
+  })
+
+  it('a hint after nothing was heard returns to that state, with its notice, without listening again', async () => {
+    const provider = new FakeSpeechProvider({ holdSynthesis: true, heard: [{ error: 'no-speech' }] })
+    const { take } = begin(dinner, 'mom', provider)
+    await until(take, 'no-input')
+    const notice = take.getState().notice
+    take.hint('slower')
+    expect(take.getState().phase).toBe('playing')
+    expect(take.getState().resumeTo).toBe('no-input')
+    provider.finishSpeaking()
+    await until(take, 'no-input')
+    expect(take.getState().notice).toBe(notice)
+    expect(provider.listenCount).toBe(1)
+    take.listenAgain() // and the way out still works
+    await until(take, 'listening')
+  })
+
+  it('a second hint during a hint keeps the original place to return to', async () => {
+    const provider = new FakeSpeechProvider({ holdSynthesis: true, heard: ['我不知道'] })
+    const { take } = begin(dinner, 'mom', provider)
+    await until(take, 'reviewing')
+    take.hint('slower')
+    take.hint('replay')
+    expect(take.getState().resumeTo).toBe('reviewing')
+    provider.finishSpeaking()
+    await until(take, 'reviewing')
+  })
+})
+
+describe('what the learner is told when listening breaks', () => {
+  it('says there is no microphone in plain words, without the error code', async () => {
+    const provider = new FakeSpeechProvider({ heard: [{ error: 'failed', message: 'audio-capture' }] })
+    const { take } = begin(dinner, 'mom', provider)
+    await until(take, 'no-input')
+    expect(take.getState().notice).toMatch(/microphone/i)
+    expect(take.getState().notice).not.toMatch(/audio-capture|\(/)
+  })
+
+  it('does not show a raw code for any other failure either', async () => {
+    const provider = new FakeSpeechProvider({ heard: [{ error: 'failed', message: 'network' }] })
+    const { take } = begin(dinner, 'mom', provider)
+    await until(take, 'no-input')
+    expect(take.getState().notice).not.toMatch(/network|\(/)
+  })
+})
+
 describe('ending a take', () => {
-  it('stops listening and speaking when disposed', async () => {
+  it('stops listening when disposed', async () => {
     const { take, provider } = begin(dinner, 'kid')
     await until(take, 'listening')
     take.dispose()
     expect(provider.listening).toBe(false)
-    const seen: TakePhase[] = []
-    take.subscribe(() => seen.push(take.getState().phase))
-    provider.hear('x')
-    await Promise.resolve()
-    expect(seen).toEqual([])
   })
 })

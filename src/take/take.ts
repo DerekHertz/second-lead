@@ -32,15 +32,24 @@ export type TakeState = {
   input: 'voice' | 'typed'
   /** Why the take asks for typing when the learner did not choose it; null otherwise. */
   inputNote: string | null
+  /** While `playing`, where the take goes back to when the audio ends; null otherwise. */
+  resumeTo: Resumable | null
   /** A passing remark about what just happened (nothing heard, audio failed). */
   notice: string | null
 }
 
-type Resumable = 'listening' | 'typing' | 'no-input' | 'reviewing'
+export type Resumable = 'listening' | 'typing' | 'no-input' | 'reviewing'
 
 const NO_RECOGNITION = "Speech recognition isn't available in this browser, so type what you say."
 const MIC_BLOCKED = 'The microphone is blocked for this page, so type what you say.'
 const NO_SYNTHESIS = "This browser can't speak aloud, so read the other characters' lines."
+
+/** Plain words for why listening stopped; the browser's error code is not for the learner. */
+function stoppedBecause(code: string): string {
+  if (code === 'audio-capture') return "I couldn't find a microphone to listen with."
+  if (code === 'network') return "Speech recognition couldn't reach its service."
+  return 'Speech recognition stopped.'
+}
 
 /**
  * One play-through of a scene by the learner. The other characters' lines are spoken, the
@@ -67,6 +76,7 @@ export class Take {
       hints: options.scene.lines.map(() => ({ meaning: 0, slower: 0, replay: 0 })),
       input: canListen ? 'voice' : 'typed',
       inputNote: canListen ? null : NO_RECOGNITION,
+      resumeTo: null,
       notice: null,
     }
   }
@@ -111,7 +121,7 @@ export class Take {
   /** "It misheard me": nothing is logged and the line is tried again. */
   misheard(): void {
     if (this.state.phase !== 'reviewing' || !this.original) return
-    settleAttempt(this.original, 'misheard')
+    // Nothing is logged for a misheard line: `settleAttempt(.., 'misheard')` would be null.
     this.set({ notice: null })
     this.collect(this.state.index)
   }
@@ -244,8 +254,7 @@ export class Take {
     } else if (code === 'no-speech') {
       this.set({ phase: 'no-input', notice: "I didn't hear anything." })
     } else {
-      const why = error instanceof Error && code === 'failed' ? ` (${error.message})` : ''
-      this.set({ phase: 'no-input', notice: `Speech recognition stopped${why}.` })
+      this.set({ phase: 'no-input', notice: stoppedBecause(error instanceof Error ? error.message : '') })
     }
   }
 
@@ -270,10 +279,11 @@ export class Take {
     if (this.state.phase !== 'playing') this.resume = this.state.phase as Resumable
     const resume = this.resume!
     const { stale, signal } = this.begin()
-    this.set({ phase: 'playing' })
+    this.set({ phase: 'playing', resumeTo: resume })
     const back = () => {
       if (stale()) return
       this.resume = null
+      this.set({ resumeTo: null })
       if (resume === 'listening') this.collect(index)
       else this.set({ phase: resume })
     }
