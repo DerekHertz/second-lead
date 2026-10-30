@@ -3,4 +3,6 @@ dist/
 .env
 .env.*
 .claude/settings.local.json
-.den/
+.den/*
+!.den/project.json
+.scratch/
