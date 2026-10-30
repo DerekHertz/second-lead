@@ -53,7 +53,7 @@ function statusText(state: TakeState, speakerName: string): string {
       const v = state.verdict!
       const outcome = v.passed ? 'Passed' : 'Not yet'
       const by = v.judged_by === 'self' ? ' (your call)' : ''
-      return `${outcome}${by}. You said: ${v.heard_text}. Words matched ${percent(v.syllable_match)}, tones ${percent(v.tone_score)}.`
+      return `${outcome}${by}. You said “${v.heard_text}”. Words matched ${percent(v.syllable_match)}, tones ${percent(v.tone_score)}.`
     }
     case 'done':
       return 'Take complete.'
