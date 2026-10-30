@@ -6,3 +6,5 @@ dist/
 .den/*
 !.den/project.json
 .scratch/
+test-results/
+playwright-report/

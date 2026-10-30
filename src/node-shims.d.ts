@@ -1,4 +1,5 @@
-// Minimal typings for the few Node APIs the build test (src/pwa.test.ts) uses,
+// Minimal typings for the few Node APIs the build test (src/pwa.test.ts) and
+// playwright.config.ts use,
 // so the project needs no @types/node dependency.
 declare module 'node:fs' {
   export function existsSync(path: string): boolean
@@ -16,3 +17,4 @@ declare module 'node:path' {
 interface ImportMeta {
   dirname: string
 }
+declare const process: { env: Record<string, string | undefined> }
