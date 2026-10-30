@@ -14,6 +14,11 @@
 alter default privileges in schema public revoke all on tables from anon, authenticated;
 alter default privileges in schema public revoke all on sequences from anon, authenticated;
 alter default privileges in schema public revoke all on functions from anon, authenticated;
+-- Functions are private until granted: PostgreSQL grants EXECUTE to PUBLIC on
+-- every new function, which a per-schema entry cannot remove, so this is global
+-- for objects the migration owner creates. A function meant for the API needs an
+-- explicit `grant execute`; a security definer function is never callable by accident.
+alter default privileges revoke execute on functions from public;
 
 revoke all on all tables in schema public from anon, authenticated;
 
@@ -48,7 +53,8 @@ create policy learner_update_own on public.learner
 -- by migrations only (no write policy matches a null owner). Imported scenes
 -- belong to their owner. owner_id and source never change after insert.
 grant select on public.scene to anon;
-grant select, insert, delete on public.scene to authenticated;
+grant select, delete on public.scene to authenticated;
+grant insert (id, owner_id, title, show, source) on public.scene to authenticated;
 grant update (title, show) on public.scene to authenticated;
 
 create policy scene_select_starter on public.scene
@@ -110,7 +116,9 @@ create policy line_write_own on public.line
 
 -- take: the learner reads their own, starts takes on a starter scene or their
 -- own scene, and may only set ended_at and the check-in afterwards. No delete.
-grant select, insert on public.take to authenticated;
+grant select on public.take to authenticated;
+-- started_at is the server's clock; ended_at is set afterwards by update
+grant insert (id, learner_id, scene_id, role_id, mode, improv_level) on public.take to authenticated;
 grant update (ended_at, checkin, checkin_note) on public.take to authenticated;
 
 create policy take_select_own on public.take
@@ -132,7 +140,11 @@ create policy take_update_own on public.take
 -- line_attempt: append-only for its learner. Insert and select only: no
 -- update or delete privilege and no such policy. The insert policy checks
 -- the whole chain: the take is the caller's and the line is in the take's scene.
-grant select, insert on public.line_attempt to authenticated;
+-- created_at (the history order) is the server's clock, not the learner's
+grant select on public.line_attempt to authenticated;
+grant insert (id, take_id, line_id, support_level, variation_text, heard_text, syllable_match,
+              tone_score, passed, judged_by, hints, response_ms)
+  on public.line_attempt to authenticated;
 
 create policy line_attempt_select_own on public.line_attempt
   for select to authenticated

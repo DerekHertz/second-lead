@@ -1,6 +1,6 @@
 -- Schema shape, privileges and the learner row created for every auth user.
 begin;
-select plan(22);
+select plan(26);
 
 -- The six tables in docs/mvp.md "Data".
 select has_table('public', 'learner', 'learner table exists');
@@ -61,8 +61,32 @@ select is(
          where grantee = 'authenticated' and table_schema = 'public'
            and table_name = 'line_attempt'
          order by 1),
-  array['INSERT', 'SELECT'],
-  'authenticated can only INSERT and SELECT line_attempt (append-only)');
+  array['SELECT'],
+  'authenticated has table-level SELECT only on line_attempt (INSERT is per column)');
+select ok(
+  has_column_privilege('authenticated', 'public.line_attempt', 'passed', 'insert')
+  and not has_column_privilege('authenticated', 'public.line_attempt', 'created_at', 'insert')
+  and not has_any_column_privilege('authenticated', 'public.line_attempt', 'update'),
+  'authenticated can insert attempt answers but not created_at, and update nothing');
+select ok(
+  has_column_privilege('authenticated', 'public.take', 'role_id', 'insert')
+  and not has_column_privilege('authenticated', 'public.take', 'started_at', 'insert')
+  and not has_column_privilege('authenticated', 'public.take', 'ended_at', 'insert'),
+  'authenticated cannot set take timestamps at insert');
+
+-- Functions are private by default: a new function in public is not executable
+-- by PUBLIC, anon or authenticated until someone grants it.
+create function public.zz_probe() returns int language sql as 'select 1';
+select ok(
+  not has_function_privilege('anon', 'public.zz_probe()', 'execute')
+  and not has_function_privilege('authenticated', 'public.zz_probe()', 'execute'),
+  'a new function in public is not executable by anon or authenticated');
+select ok(
+  not exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+               where n.nspname = 'public'
+                 and (has_function_privilege('anon', p.oid, 'execute')
+                      or has_function_privilege('authenticated', p.oid, 'execute'))),
+  'no function in public is executable by anon or authenticated');
 
 -- The signup trigger.
 select has_function('public', 'handle_new_user', 'handle_new_user exists');

@@ -35,7 +35,7 @@ Only the services the schema needs run: Postgres, the API gateway and Auth (Auth
 | Starter scenes, characters, lines (`owner_id` null) | read | read | write |
 | Imported scenes, characters, lines | none | owner reads and writes | all |
 | `learner` | none | read own; update `display_name`, `speech_pref`, `research_opt_in` of own | all |
-| `take` | none | read own; insert own (on a starter scene or an own scene); update only `ended_at`, `checkin`, `checkin_note`; no delete | all |
+| `take` | none | read own; insert own (on a starter scene or an own scene, not setting timestamps); update only `ended_at`, `checkin`, `checkin_note`; no delete | all |
 | `line_attempt` | none | read own; insert own; **no update, no delete** | all |
 | `line_support` view | none | own rows | all |
 | `research_stats` view | none | **none** | read |
@@ -46,6 +46,10 @@ Mechanics worth knowing:
 - Ownership chains are foreign keys where a policy can't see across rows: a line's speaker and a take's role are characters of the same scene (composite keys), and the `line_attempt` insert policy checks the take is the caller's and the line is in the take's scene.
 - Append-only is enforced by privileges: `authenticated` holds only INSERT and SELECT on `line_attempt`. A learner cannot delete attempts one by one. Deleting the **account** still removes them, and so does deleting an imported scene (cascade).
 - Deleting a learner: delete the `auth.users` row (the Auth admin API or `service_role`). It cascades `auth.users` to `learner` to their scenes (with characters and lines) and takes (with line attempts). Learners have no `DELETE` on their own `learner` row: removing it alone would orphan the auth user. An "erase my account" button needs an Edge Function that calls the admin API (a later issue).
+- Server-owned columns are not insertable or updatable by learners (column grants): `line_attempt.created_at` (so history order can't be rewritten), `take.started_at`/`ended_at` at insert, `take.scene_id`/`role_id`/`mode`, `scene.source`/`owner_id`/`created_at`, `learner.id`/`created_at`.
+- Learner-supplied numbers that feed `research_stats` are bounded by constraints so the view can't overflow for the maintainer: a take lasts at most 24 hours, `response_ms` is 0 to 3,600,000, and `hints` has exactly `meaning`, `slower`, `replay`, each a whole number 0 to 1000.
+- Functions are private by default (`alter default privileges revoke execute on functions from public`). A function meant for the API needs an explicit `grant execute`; a test fails if any function in `public` is callable by `anon` or `authenticated`. Check this when a later migration installs an extension.
+- Deleting an imported scene also deletes the takes and attempts on it: it is the learner's own data and mvp.md gives the owner write access to imported scenes.
 - `handle_new_user()` is `security definer` with `search_path = ''` and not executable by `anon` or `authenticated`.
 
 ## Support level

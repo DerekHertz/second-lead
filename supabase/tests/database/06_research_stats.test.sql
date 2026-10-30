@@ -1,7 +1,7 @@
 -- research_stats: numbers from opted-in learners only, no text, no IDs,
 -- readable by the maintainer (service_role / database owner) only.
 begin;
-select plan(14);
+select plan(28);
 
 insert into auth.users (id, aud, role, email) values
   ('11111111-1111-1111-1111-111111111111', 'authenticated', 'authenticated', 'a@example.test'),
@@ -79,6 +79,75 @@ select ok(
   not exists (select 1 from public.research_stats s
                where s::text ~ '(SECRET|11111111|22222222|d1a00000|d2a00000|d1b00000)'),
   'no row carries any text, display name, note, title or ID');
+reset role;
+
+-- Learner-controlled values can't make the view fail for the maintainer.
+-- Every number the view casts or sums is bounded by a constraint.
+set local "request.jwt.claims" = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+set local role authenticated;
+select throws_ok(
+  $$ update public.take set ended_at = '294000-01-01' where id = 'd2a00000-0000-0000-0000-000000000000' $$,
+  '23514', null, 'a take cannot end absurdly long after it started');
+select throws_ok(
+  $$ update public.take set ended_at = started_at + interval '25 hours' where id = 'd2a00000-0000-0000-0000-000000000000' $$,
+  '23514', null, 'a take is capped at 24 hours');
+select throws_ok(
+  $$ insert into public.line_attempt (take_id, line_id, support_level, passed, judged_by, hints)
+     values ('d2a00000-0000-0000-0000-000000000000', '1aa00000-0000-0000-0000-000000000000', 3, true, 'match',
+             '{"meaning":1e30,"slower":0,"replay":0}') $$,
+  '23514', null, 'a hint count cannot be huge');
+select throws_ok(
+  $$ insert into public.line_attempt (take_id, line_id, support_level, passed, judged_by, hints)
+     values ('d2a00000-0000-0000-0000-000000000000', '1aa00000-0000-0000-0000-000000000000', 3, true, 'match',
+             '{"x":1}') $$,
+  '23514', null, 'hints must have meaning, slower and replay');
+select throws_ok(
+  $$ insert into public.line_attempt (take_id, line_id, support_level, passed, judged_by, hints)
+     values ('d2a00000-0000-0000-0000-000000000000', '1aa00000-0000-0000-0000-000000000000', 3, true, 'match',
+             '{"meaning":1,"slower":0}') $$,
+  '23514', null, 'a missing hints key is rejected');
+select throws_ok(
+  $$ insert into public.line_attempt (take_id, line_id, support_level, passed, judged_by, hints)
+     values ('d2a00000-0000-0000-0000-000000000000', '1aa00000-0000-0000-0000-000000000000', 3, true, 'match',
+             '{"meaning":1,"slower":0,"replay":0,"extra":1}') $$,
+  '23514', null, 'an extra hints key is rejected');
+select throws_ok(
+  $$ insert into public.line_attempt (take_id, line_id, support_level, passed, judged_by, hints)
+     values ('d2a00000-0000-0000-0000-000000000000', '1aa00000-0000-0000-0000-000000000000', 3, true, 'match',
+             '{"meaning":1.5,"slower":0,"replay":0}') $$,
+  '23514', null, 'hint counts are whole numbers');
+select throws_ok(
+  $$ insert into public.line_attempt (take_id, line_id, support_level, passed, judged_by, hints)
+     values ('d2a00000-0000-0000-0000-000000000000', '1aa00000-0000-0000-0000-000000000000', 3, true, 'match',
+             '{"meaning":-1,"slower":0,"replay":0}') $$,
+  '23514', null, 'hint counts are not negative');
+select throws_ok(
+  $$ insert into public.line_attempt (take_id, line_id, support_level, passed, judged_by, hints)
+     values ('d2a00000-0000-0000-0000-000000000000', '1aa00000-0000-0000-0000-000000000000', 3, true, 'match',
+             '{"meaning":"5","slower":0,"replay":0}') $$,
+  '23514', null, 'hint counts are numbers, not strings');
+select throws_ok(
+  $$ insert into public.line_attempt (take_id, line_id, support_level, passed, judged_by, response_ms)
+     values ('d2a00000-0000-0000-0000-000000000000', '1aa00000-0000-0000-0000-000000000000', 3, true, 'match', 3600001) $$,
+  '23514', null, 'a response time is capped at an hour');
+-- The largest values the constraints allow still summarise.
+select lives_ok(
+  $$ update public.take set ended_at = started_at + interval '24 hours' where id = 'd2a00000-0000-0000-0000-000000000000' $$,
+  'a take can last the full 24 hours');
+select lives_ok(
+  $$ insert into public.line_attempt (take_id, line_id, support_level, passed, judged_by, hints, response_ms)
+     values ('d2a00000-0000-0000-0000-000000000000', '1aa00000-0000-0000-0000-000000000000', 3, true, 'match',
+             '{"meaning":1000,"slower":1000,"replay":1000}', 3600000) $$,
+  'maximum hint counts and response time are accepted');
+reset role;
+set local role service_role;
+select lives_ok($$ select * from public.research_stats $$,
+  'research_stats still works for the maintainer at the largest allowed values');
+select ok(
+  (select hints_meaning = 1000 and hints_slower = 1000 and hints_replay = 1000
+          and duration_s = 86400 and avg_response_ms = 3600000
+     from public.research_stats where attempts = 1),
+  'the extreme take summarises exactly');
 reset role;
 
 -- Not readable by signed-out or ordinary signed-in users.

@@ -1,7 +1,7 @@
 -- Takes and line attempts: private to the learner, ownership chains enforced,
 -- line attempts append-only.
 begin;
-select plan(28);
+select plan(34);
 
 insert into auth.users (id, aud, role, email) values
   ('11111111-1111-1111-1111-111111111111', 'authenticated', 'authenticated', 'a@example.test'),
@@ -85,6 +85,22 @@ select throws_ok(
       where id = 'd0a00000-0000-0000-0000-000000000000' $$,
   '42501', null, 'A cannot reassign a take to B');
 select throws_ok(
+  $$ update public.take set scene_id = '5a000000-0000-0000-0000-000000000000' where id = 'd0a00000-0000-0000-0000-000000000000' $$,
+  '42501', null, 'A cannot move a take to another scene');
+select throws_ok(
+  $$ update public.take set role_id = 'caa00000-0000-0000-0000-000000000000' where id = 'd0a00000-0000-0000-0000-000000000000' $$,
+  '42501', null, 'A cannot change a take''s role');
+select throws_ok(
+  $$ update public.take set mode = 'improv', improv_level = 'swap' where id = 'd0a00000-0000-0000-0000-000000000000' $$,
+  '42501', null, 'A cannot change a take''s mode');
+select throws_ok(
+  $$ update public.take set started_at = '2000-01-01' where id = 'd0a00000-0000-0000-0000-000000000000' $$,
+  '42501', null, 'A cannot change when a take started');
+select throws_ok(
+  $$ insert into public.take (learner_id, scene_id, role_id, mode, started_at)
+     values ('11111111-1111-1111-1111-111111111111', '50000000-0000-0000-0000-000000000000', 'c0a00000-0000-0000-0000-000000000000', 'scripted', '2000-01-01') $$,
+  '42501', null, 'A cannot backdate a take at insert');
+select throws_ok(
   $$ delete from public.take where id = 'd0a00000-0000-0000-0000-000000000000' $$,
   '42501', null, 'A cannot delete a take');
 
@@ -101,6 +117,10 @@ select throws_ok(
   $$ insert into public.line_attempt (take_id, line_id, support_level, passed, judged_by)
      values ('d0a00000-0000-0000-0000-000000000000', '1ba00000-0000-0000-0000-000000000000', 2, true, 'match') $$,
   '42501', null, 'an attempt''s line must belong to the take''s scene');
+select throws_ok(
+  $$ insert into public.line_attempt (take_id, line_id, support_level, passed, judged_by, created_at)
+     values ('d0a00000-0000-0000-0000-000000000000', '10a00000-0000-0000-0000-000000000000', 2, true, 'match', '2000-01-01') $$,
+  '42501', null, 'A cannot backdate or reorder their own attempt history');
 select throws_ok(
   $$ update public.line_attempt set passed = true where id = 'a0a00000-0000-0000-0000-000000000000' $$,
   '42501', null, 'A cannot update a line attempt');

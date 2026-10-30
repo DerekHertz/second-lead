@@ -61,7 +61,9 @@ create table public.take (
   checkin smallint check (checkin between 1 and 4),
   checkin_note text,
   constraint take_improv_level_matches_mode check ((mode = 'improv') = (improv_level is not null)),
-  constraint take_ended_after_started check (ended_at is null or ended_at >= started_at),
+  -- ended_at is learner-updatable and feeds research_stats' duration, so it is bounded
+  constraint take_ended_after_started check (
+    ended_at is null or (ended_at >= started_at and ended_at <= started_at + interval '24 hours')),
   -- the role is a character of the take's scene
   constraint take_role_in_scene_fkey foreign key (scene_id, role_id)
     references public.character (scene_id, id) on delete cascade
@@ -85,15 +87,18 @@ create table public.line_attempt (
   judged_by text not null check (judged_by in ('match', 'ai', 'self')),
   -- counts of hints used on this line
   hints jsonb not null default '{"meaning": 0, "slower": 0, "replay": 0}'::jsonb,
-  response_ms integer check (response_ms >= 0),
+  response_ms integer check (response_ms between 0 and 3600000), -- at most an hour
   created_at timestamptz not null default clock_timestamp(),
+  -- exactly meaning, slower, replay: each a whole number from 0 to 1000. Every
+  -- learner-supplied number that research_stats sums or casts is bounded, so the
+  -- view cannot overflow for the maintainer.
   constraint line_attempt_hints_shape check (
-    jsonb_typeof(hints -> 'meaning') = 'number'
-    and jsonb_typeof(hints -> 'slower') = 'number'
-    and jsonb_typeof(hints -> 'replay') = 'number'
-    and (hints ->> 'meaning')::numeric >= 0
-    and (hints ->> 'slower')::numeric >= 0
-    and (hints ->> 'replay')::numeric >= 0
+    jsonb_typeof(hints) = 'object'
+    and hints - 'meaning' - 'slower' - 'replay' = '{}'::jsonb
+    and jsonb_path_exists(hints,
+      '$ ? (@.meaning.type() == "number" && @.meaning >= 0 && @.meaning <= 1000 && @.meaning == @.meaning.floor()
+         && @.slower.type() == "number" && @.slower >= 0 && @.slower <= 1000 && @.slower == @.slower.floor()
+         && @.replay.type() == "number" && @.replay >= 0 && @.replay <= 1000 && @.replay == @.replay.floor())')
   )
 );
 create index line_attempt_take_idx on public.line_attempt (take_id);

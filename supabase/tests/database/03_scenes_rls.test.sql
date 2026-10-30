@@ -1,7 +1,7 @@
 -- Scenes, characters and lines: starter content is public and read-only,
 -- imported scenes are private to their owner.
 begin;
-select plan(33);
+select plan(36);
 
 -- Fixtures (as the migration owner, which bypasses row-level security).
 insert into auth.users (id, aud, role, email) values
@@ -142,6 +142,16 @@ select throws_ok(
   $$ insert into public.line (scene_id, character_id, position, hanzi, pinyin, english)
      values ('5a100000-0000-0000-0000-000000000000', 'caa00000-0000-0000-0000-000000000000', 2, 'x', 'x', 'x') $$,
   '23503', null, 'a line''s character must belong to the line''s scene');
+select throws_ok(
+  $$ update public.scene set source = 'subtitle' where id = '5a100000-0000-0000-0000-000000000000' $$,
+  '42501', null, 'A cannot change the source of their scene');
+select throws_ok(
+  $$ update public.scene set created_at = '2000-01-01' where id = '5a100000-0000-0000-0000-000000000000' $$,
+  '42501', null, 'A cannot change the created_at of their scene');
+select throws_ok(
+  $$ insert into public.scene (owner_id, title, source, created_at)
+     values ('11111111-1111-1111-1111-111111111111', 'old', 'paste', '2000-01-01') $$,
+  '42501', null, 'A cannot backdate a scene at insert');
 select throws_ok(
   $$ update public.scene set owner_id = '22222222-2222-2222-2222-222222222222'
       where id = '5a100000-0000-0000-0000-000000000000' $$,

@@ -46,7 +46,9 @@ grant select on public.line_support to authenticated;
 -- who opted in (learner.research_opt_in). Counts, rates, levels and timings
 -- only: no text columns (no heard_text, variation_text, checkin_note, hanzi,
 -- titles, names) and no IDs (no learner, take, scene or line id), and the
--- start time is cut to a day.
+-- start time is cut to a day. Every number it casts or sums is bounded by a
+-- constraint on take or line_attempt (see the schema migration), so it cannot
+-- overflow; sums are bigint regardless.
 --
 -- Deliberately NOT security_invoker: it must read every opted-in learner's
 -- rows, which row-level security forbids to any one learner. It runs with its
@@ -68,9 +70,9 @@ select
   round(avg(a.syllable_match), 3) as avg_syllable_match,
   round(avg(a.tone_score), 3) as avg_tone_score,
   round(avg(a.support_level), 3) as avg_support_level,
-  coalesce(sum((a.hints ->> 'meaning')::numeric), 0)::int as hints_meaning,
-  coalesce(sum((a.hints ->> 'slower')::numeric), 0)::int as hints_slower,
-  coalesce(sum((a.hints ->> 'replay')::numeric), 0)::int as hints_replay,
+  coalesce(sum((a.hints ->> 'meaning')::numeric), 0)::bigint as hints_meaning,
+  coalesce(sum((a.hints ->> 'slower')::numeric), 0)::bigint as hints_slower,
+  coalesce(sum((a.hints ->> 'replay')::numeric), 0)::bigint as hints_replay,
   round(avg(a.response_ms))::int as avg_response_ms
 from public.take t
 join public.learner l on l.id = t.learner_id and l.research_opt_in

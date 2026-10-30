@@ -1,6 +1,6 @@
 -- A learner can read and update only their own learner row, and not change id.
 begin;
-select plan(9);
+select plan(10);
 
 insert into auth.users (id, aud, role, email) values
   ('11111111-1111-1111-1111-111111111111', 'authenticated', 'authenticated', 'a@example.test'),
@@ -38,6 +38,10 @@ select throws_ok(
   $$ update public.learner set id = '33333333-3333-3333-3333-333333333333'
       where id = '11111111-1111-1111-1111-111111111111' $$,
   '42501', null, 'A cannot change their learner id');
+select throws_ok(
+  $$ update public.learner set created_at = '2000-01-01'
+      where id = '11111111-1111-1111-1111-111111111111' $$,
+  '42501', null, 'A cannot change their learner created_at');
 select throws_ok(
   $$ insert into public.learner (id) values ('33333333-3333-3333-3333-333333333333') $$,
   '42501', null, 'A cannot insert learner rows (the signup trigger does)');
