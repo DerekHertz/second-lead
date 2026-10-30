@@ -200,6 +200,30 @@ describe('support levels', () => {
     expect(screen.queryByText(/Hints used/)).toBeNull()
   })
 
+  it('keeps a line uncovered after "It misheard me": the learner has seen it, so it is no hint', async () => {
+    const { provider, user } = await start('Family dinner', 'Kid', { support: allAt(1) })
+    await waitFor(() => expect(provider.listening).toBe(true))
+    provider.hear('我不知道')
+    await waitFor(() => expect(status()).toMatch(/Not yet/))
+    await user.click(screen.getByRole('button', { name: 'It misheard me' }))
+    await waitFor(() => expect(provider.listening).toBe(true))
+    expect(within(currentLine()).queryByRole('button', { name: /a hint/ })).toBeNull()
+    expect(shown(currentLine())).toContain(dinner.lines[1]!.english)
+    expect(screen.queryByText(/Hints used/)).toBeNull()
+  })
+
+  it('offers More help and Less help only on the learner’s own line', async () => {
+    const provider = new FakeSpeechProvider({ holdSynthesis: true })
+    const { user } = await start('Family dinner', 'Kid', { provider })
+    await waitFor(() => expect(provider.speaking).toBe(1))
+    await user.click(screen.getByRole('button', { name: 'Take menu' }))
+    expect((screen.getByRole('button', { name: 'More help' }) as HTMLButtonElement).disabled).toBe(true)
+    expect((screen.getByRole('button', { name: 'Less help' }) as HTMLButtonElement).disabled).toBe(true)
+    provider.finishSpeaking()
+    await waitFor(() => expect(provider.listening).toBe(true))
+    expect((screen.getByRole('button', { name: 'Less help' }) as HTMLButtonElement).disabled).toBe(false)
+  })
+
   it('“More help” and “Less help” in the take menu change the support of the line you are on', async () => {
     const { user } = await start('Family dinner', 'Kid')
     await waitFor(() => expect(status()).toMatch(/listening/i))
@@ -378,13 +402,20 @@ describe('pencil marks', () => {
 
 describe('turning pages', () => {
   it('flips the page when its last line is done, and the next page comes up', async () => {
-    const provider = new FakeSpeechProvider({ heard: learnerHanzi(dinner, 'kid') })
+    const provider = new FakeSpeechProvider({ holdSynthesis: true })
     const { user } = await start('Family dinner', 'Kid', { provider })
-    await user.click(await screen.findByRole('button', { name: 'Next line' })) // line 2
-    await screen.findByRole('button', { name: 'Next line' }) // line 4, the last on page 1
-    expect(screen.getByRole('region', { name: 'Page 1' })).toBeTruthy()
-    await user.click(screen.getByRole('button', { name: 'Next line' }))
-    await waitFor(() => expect(screen.getByRole('region', { name: 'Page 2' })).toBeTruthy())
+    for (const i of [1, 3]) {
+      await waitFor(() => expect(provider.speaking).toBe(1))
+      provider.finishSpeaking()
+      await waitFor(() => expect(provider.listening).toBe(true))
+      provider.hear(dinner.lines[i]!.hanzi)
+      await screen.findByRole('button', { name: 'Next line' })
+      expect(screen.getByRole('region', { name: 'Page 1' })).toBeTruthy()
+      await user.click(screen.getByRole('button', { name: 'Next line' }))
+    }
+    // Mom's line 5, the first on page 2, is being spoken: page 2 is already up
+    await waitFor(() => expect(provider.speaking).toBe(1))
+    expect(screen.getByRole('region', { name: 'Page 2' })).toBeTruthy()
     expect(screen.queryByRole('region', { name: 'Page 1' })).toBeNull()
     expect(screen.getByText('p. 2 of 3')).toBeTruthy()
     expect(screen.getByRole('region', { name: 'Page 2' }).contains(currentLine())).toBe(true)
@@ -402,6 +433,20 @@ describe('turning pages', () => {
     await user.click(screen.getByRole('button', { name: 'Back to your page' }))
     expect(screen.getByRole('region', { name: 'Page 2' })).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Back to your page' })).toBeNull()
+  })
+
+  it('brings the learner back to their page when a verdict arrives while they review', async () => {
+    const provider = new FakeSpeechProvider({ heard: learnerHanzi(dinner, 'kid').slice(0, 2) })
+    const { user } = await start('Family dinner', 'Kid', { provider })
+    await user.click(await screen.findByRole('button', { name: 'Next line' }))
+    await user.click(await screen.findByRole('button', { name: 'Next line' }))
+    await waitFor(() => expect(provider.listening).toBe(true)) // line 6, on page 2
+    await user.click(screen.getByRole('button', { name: 'Previous page' }))
+    expect(screen.getByRole('region', { name: 'Page 1' })).toBeTruthy()
+    provider.hear(dinner.lines[5]!.hanzi)
+    await screen.findByRole('button', { name: 'Next line' })
+    expect(screen.getByRole('region', { name: 'Page 2' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: "That wasn't right" })).toBeTruthy()
   })
 })
 
@@ -476,6 +521,15 @@ describe('the end page', () => {
     expect((within(title).getByRole('button', { name: 'Begin' }) as HTMLButtonElement).disabled).toBe(false)
   })
 
+  it('flips back from the end page to review the marked-up script, and forward again', async () => {
+    const { user } = await toTheEnd()
+    await user.click(screen.getByRole('button', { name: 'Previous page' }))
+    const page = screen.getByRole('region', { name: 'Page 3' })
+    expect(within(page).getAllByRole('img', { name: 'Passed' }).length).toBeGreaterThan(0)
+    await user.click(screen.getByRole('button', { name: 'Next page' }))
+    expect(screen.getByRole('region', { name: 'End page' })).toBeTruthy()
+  })
+
   it('goes back to the shelf', async () => {
     const { user } = await toTheEnd()
     await user.click(screen.getByRole('button', { name: 'Skip' }))
@@ -485,6 +539,25 @@ describe('the end page', () => {
 })
 
 describe('keyboard', () => {
+  it('keeps focus inside the take menu while it is open, and Esc closes it', async () => {
+    const { user } = await start('Family dinner', 'Kid')
+    await waitFor(() => expect(status()).toMatch(/listening/i))
+    const opener = screen.getByRole('button', { name: 'Take menu' })
+    await user.click(opener)
+    const menu = screen.getByRole('dialog', { name: 'Take menu' })
+    for (let i = 0; i < 12; i++) {
+      await user.tab()
+      expect(menu.contains(document.activeElement)).toBe(true)
+    }
+    for (let i = 0; i < 3; i++) {
+      await user.tab({ shift: true })
+      expect(menu.contains(document.activeElement)).toBe(true)
+    }
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog', { name: 'Take menu' })).toBeNull()
+    expect(document.activeElement).toBe(opener)
+  })
+
   it('reaches a slip by Tab and lifts it with Enter', async () => {
     const { user } = await start('Family dinner', 'Kid', { support: allAt(1) })
     await waitFor(() => expect(status()).toMatch(/listening/i))

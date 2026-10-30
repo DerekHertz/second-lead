@@ -86,11 +86,22 @@ test('hints are one tap away and counted; a miss can be flipped or retried', asy
   const file = scene('family-dinner')
   await expect(status(page)).toContainText('your cue')
 
+  // less help puts a slip over the meaning; lifting it is a hint
+  await page.getByRole('button', { name: 'Take menu' }).click()
+  await page.getByRole('button', { name: 'Less help' }).click()
+  await page.getByRole('button', { name: 'Close' }).click()
+  const now = page.locator('article[aria-current="true"]')
+  const slip = now.getByRole('button', { name: 'Show the meaning (a hint)' })
+  await slip.click()
+  await expect(slip).toHaveCount(0)
+  await expect(now.getByText(file.lines[1]!.english)).toBeVisible()
+  await expect(page.getByText('Hints used: 1')).toBeAttached()
+
   await page.getByRole('button', { name: 'Play slower' }).click()
   await expect(status(page)).toContainText('your cue')
   await page.getByRole('button', { name: 'Replay' }).click()
   await expect(status(page)).toContainText('your cue')
-  await expect(page.getByText('Hints used: 2')).toBeAttached()
+  await expect(page.getByText('Hints used: 3')).toBeAttached()
   const audio = await spoken(page)
   expect(audio.at(-2)!.rate).toBeCloseTo(0.6, 5) // the utterance stores rate as a float32
   expect(audio.at(-1)!.rate).toBe(1)
