@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type KeyboardEvent, type ReactNode } from 'react'
 import type { Role, Scene, SupportLevel } from '../scene'
 import type { SpeechProvider } from '../speech/provider'
 import { createTake, type HintKind, type Take, type TakePhase, type TakeState } from '../take/take'
@@ -38,7 +38,8 @@ export function Packet({ scene, speech, support, resumeAs, onBegin, onBack }: Pr
   const [levels, setLevels] = useState<SupportLevel[]>(() => (resumeAs ? support(scene, resumeAs.id) : []))
   const [autoCue, setAutoCue] = useState(true)
   const [listenFirst, setListenFirst] = useState(false)
-  const [lifted, setLifted] = useState<Set<number>>(new Set())
+  // Lines whose slips are up for the rest of the take: lifted by hand, or shown with a verdict.
+  const [seen, setSeen] = useState<Set<number>>(new Set())
   const [review, setReview] = useState<{ page: number; from: number } | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [take, setTake] = useState<Take | null>(null)
@@ -57,6 +58,15 @@ export function Packet({ scene, speech, support, resumeAs, onBegin, onBack }: Pr
   }, [scene, role, speech, started, run])
 
   const state = useTakeState(take)
+
+  // A verdict uncovers its line for good ("It misheard me" does not cover it again), and brings a
+  // learner who is looking at an earlier page back to the line, where the verdict's buttons are.
+  const judged = state?.phase === 'reviewing' ? state.index : null
+  useEffect(() => {
+    if (judged === null) return
+    setSeen((s) => (s.has(judged) ? s : new Set(s).add(judged)))
+    setReview(null)
+  }, [judged])
   const scriptPages = Math.ceil(scene.lines.length / PER_PAGE)
   const endPage = scriptPages + 1
   const current = !started ? 0 : !state ? 1 : state.phase === 'done' ? endPage : 1 + Math.floor(state.index / PER_PAGE)
@@ -65,7 +75,7 @@ export function Packet({ scene, speech, support, resumeAs, onBegin, onBack }: Pr
 
   const begin = (r: Role) => {
     setLevels(support(scene, r.id))
-    setLifted(new Set())
+    setSeen(new Set())
     setReview(null)
     setStarted(true)
     setRun((n) => n + 1)
@@ -94,11 +104,11 @@ export function Packet({ scene, speech, support, resumeAs, onBegin, onBack }: Pr
           roleId={role?.id ?? ''}
           state={started ? state : null}
           levels={levels}
-          lifted={lifted}
+          seen={seen}
           listenFirst={listenFirst}
           inView={inView === p + 1}
           onLift={(i) => {
-            setLifted(new Set(lifted).add(i))
+            setSeen(new Set(seen).add(i))
             take?.hint('meaning')
           }}
         />
@@ -114,7 +124,7 @@ export function Packet({ scene, speech, support, resumeAs, onBegin, onBack }: Pr
 
   return (
     <section className="take">
-      <div className="topbar">
+      <div className="topbar" inert={menuOpen}>
         <button className="back" aria-label="Shelf" onClick={onBack}>
           ‹ Shelf
         </button>
@@ -129,7 +139,7 @@ export function Packet({ scene, speech, support, resumeAs, onBegin, onBack }: Pr
         </span>
         {inView > 0 && (
           <span className="pnav">
-            <button aria-label="Previous page" disabled={inView <= 1 || inView > scriptPages} onClick={() => turnTo(inView - 1)}>
+            <button aria-label="Previous page" disabled={inView <= 1} onClick={() => turnTo(inView - 1)}>
               ‹
             </button>
             <span>{inView === endPage ? 'end' : `p. ${inView} of ${scriptPages}`}</span>
@@ -139,7 +149,7 @@ export function Packet({ scene, speech, support, resumeAs, onBegin, onBack }: Pr
           </span>
         )}
       </div>
-      <div className="packet">
+      <div className="packet" inert={menuOpen}>
         <span className="staple" />
         {pages.map((p, k) => (
           <section
@@ -167,7 +177,8 @@ export function Packet({ scene, speech, support, resumeAs, onBegin, onBack }: Pr
           state={state}
           scene={scene}
           speech={speech}
-          reviewing={inView !== current}
+          earlierPage={inView !== current}
+          inert={menuOpen}
           onBackToPage={() => setReview(null)}
           onMenu={() => setMenuOpen(true)}
         />
@@ -176,6 +187,7 @@ export function Packet({ scene, speech, support, resumeAs, onBegin, onBack }: Pr
         <TakeMenu
           autoCue={autoCue}
           listenFirst={listenFirst}
+          canHelp={scene.lines[state.index]?.roleId === role?.id}
           canType={speech.canRecognize && (state.phase === 'listening' || state.phase === 'no-input')}
           onAutoCue={() => {
             take?.setAutoCue(!autoCue)
@@ -186,7 +198,7 @@ export function Packet({ scene, speech, support, resumeAs, onBegin, onBack }: Pr
             const i = state.index
             if (scene.lines[i]?.roleId !== role?.id) return
             setLevels(levels.map((l, k) => (k === i ? (Math.min(3, Math.max(0, (l ?? 0) + change)) as SupportLevel) : l)))
-            setLifted(new Set([...lifted].filter((k) => k !== i)))
+            setSeen(new Set([...seen].filter((k) => k !== i)))
           }}
           onTypeInstead={() => {
             setMenuOpen(false)
@@ -248,7 +260,7 @@ function ScriptPage({
   roleId,
   state,
   levels,
-  lifted,
+  seen,
   listenFirst,
   inView,
   onLift,
@@ -259,7 +271,7 @@ function ScriptPage({
   roleId: string
   state: TakeState | null
   levels: SupportLevel[]
-  lifted: Set<number>
+  seen: Set<number>
   listenFirst: boolean
   inView: boolean
   onLift: (index: number) => void
@@ -291,7 +303,7 @@ function ScriptPage({
             position={i < index || state?.phase === 'done' ? 'past' : now ? 'now' : 'future'}
             isLearners={isLearners}
             level={levels[i] ?? 0}
-            revealed={lifted.has(i) || attempted}
+            revealed={seen.has(i) || attempted}
             unheard={listenFirst && state?.phase !== 'done' && i >= index}
             speaking={now && state.phase === 'speaking'}
             verdict={verdict}
@@ -441,7 +453,8 @@ function Dock({
   state,
   scene,
   speech,
-  reviewing,
+  earlierPage,
+  inert,
   onBackToPage,
   onMenu,
 }: {
@@ -449,7 +462,9 @@ function Dock({
   state: TakeState
   scene: Scene
   speech: SpeechProvider
-  reviewing: boolean
+  /** The learner has flipped back to an earlier page. */
+  earlierPage: boolean
+  inert: boolean
   onBackToPage: () => void
   onMenu: () => void
 }) {
@@ -488,9 +503,9 @@ function Dock({
   const hint = (kind: HintKind) => take.hint(kind)
 
   return (
-    <div className="dock">
+    <div className="dock" inert={inert}>
       <div className="after">
-        {reviewing ? (
+        {earlierPage ? (
           <button onClick={onBackToPage}>Back to your page</button>
         ) : (
           view === 'reviewing' &&
@@ -562,6 +577,7 @@ function TakeMenu({
   canType,
   onAutoCue,
   onListenFirst,
+  canHelp,
   onHelp,
   onTypeInstead,
   onLeave,
@@ -572,6 +588,8 @@ function TakeMenu({
   canType: boolean
   onAutoCue: () => void
   onListenFirst: () => void
+  /** More and less help apply to the learner's own line. */
+  canHelp: boolean
   onHelp: (change: 1 | -1) => void
   onTypeInstead: () => void
   onLeave: () => void
@@ -583,9 +601,20 @@ function TakeMenu({
     first.current?.focus()
     return () => opener?.focus()
   }, [])
+  const dialog = useRef<HTMLDivElement>(null)
+  // A modal sheet: Tab and Shift+Tab go round its own buttons, and Esc closes it.
+  const keyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') return onClose()
+    if (e.key !== 'Tab') return
+    const buttons = [...(dialog.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [])]
+    const edge = e.shiftKey ? buttons[0] : buttons.at(-1)
+    if (document.activeElement !== edge) return
+    e.preventDefault()
+    ;(e.shiftKey ? buttons.at(-1) : buttons[0])?.focus()
+  }
   return (
-    <div className="sheet" onClick={(e) => e.target === e.currentTarget && onClose()} onKeyDown={(e) => e.key === 'Escape' && onClose()}>
-      <div className="in" role="dialog" aria-modal="true" aria-label="Take menu">
+    <div className="sheet" onClick={(e) => e.target === e.currentTarget && onClose()} onKeyDown={keyDown}>
+      <div ref={dialog} className="in" role="dialog" aria-modal="true" aria-label="Take menu">
         <button ref={first} className="row" role="switch" aria-checked={autoCue} aria-label="Auto-cue" onClick={onAutoCue}>
           <span>
             Auto-cue<small>open the mic when your cue comes</small>
@@ -603,8 +632,12 @@ function TakeMenu({
             This line<small>support for the line you're on</small>
           </span>
           <span className="pair">
-            <button onClick={() => onHelp(-1)}>More help</button>
-            <button onClick={() => onHelp(1)}>Less help</button>
+            <button onClick={() => onHelp(-1)} disabled={!canHelp}>
+              More help
+            </button>
+            <button onClick={() => onHelp(1)} disabled={!canHelp}>
+              Less help
+            </button>
           </span>
         </div>
         {canType && (
