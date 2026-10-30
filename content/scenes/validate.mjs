@@ -59,7 +59,7 @@ const NEUTRAL_WORDS = [
   ['朋友', 1, 'you'], ['喜欢', 1, 'huan'], ['告诉', 1, 'su'], ['知道', 1, 'dao'],
   ['时候', 1, 'hou'], ['漂亮', 1, 'liang'], ['认识', 1, 'shi'], ['休息', 1, 'xi'],
   ['师傅', 1, 'fu'], ['路上', 1, 'shang'], ['左边', 1, 'bian'], ['右边', 1, 'bian'],
-  ['那边', 1, 'bian'], ['过去', 1, 'qu'],
+  ['那边', 1, 'bian'], ['过去', 1, 'qu'], ['还是', 1, 'shi'],
 ];
 const REDUPLICATED = '妈爸哥姐弟妹谢看';
 
@@ -279,6 +279,7 @@ export function validateScene(scene, { allowedChars, docsText, fileBase }) {
           checkText(d, `${w} branch ${label}`);
         }
         if (isObj(d0) && d0.character !== line.character) add('branch', `${w}: detour[0] must be spoken by the line's character`);
+        if (isObj(d0) && d0.hanzi === line.hanzi) add('branch', `${w}: detour[0] is identical to the line, it must steer away from it`);
         if (isObj(d1) && d1.character !== scene.defaultRole) add('branch', `${w}: detour[1] must be spoken by the default role`);
       }
       if (!isObj(b.steerBack)) add('branch', `${w}: branch.steerBack is required`);

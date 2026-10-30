@@ -27,7 +27,7 @@
           "changes": "dish: fish becomes eggs",
           "hanzi": "多吃点儿，这个鸡蛋是你最爱吃的。",
           "pinyin": "duō chī diǎnr, zhège jīdàn shì nǐ zuì ài chī de.",
-          "english": "Eat more. These eggs are your favorite.",
+          "english": "Eat more. This egg dish is your favorite.",
           "reply": {
             "hanzi": "妈，我已经吃了很多鸡蛋了。",
             "pinyin": "mā, wǒ yǐjīng chī le hěn duō jīdàn le.",
@@ -71,7 +71,7 @@
       "character": "mom",
       "position": 3,
       "hanzi": "就吃这么一点儿？你看你，工作那么忙，也不好好吃饭。",
-      "pinyin": "jiù chī zhème yì diǎnr? nǐ kàn nǐ, gōngzuò nàme máng, yě bù hǎohǎo chīfàn.",
+      "pinyin": "jiù chī zhème yìdiǎnr? nǐ kàn nǐ, gōngzuò nàme máng, yě bù hǎohǎo chīfàn.",
       "english": "That's all you're eating? Look at you, so busy with work and not even eating properly.",
       "variations": {
         "paraphrase": {
@@ -107,9 +107,9 @@
           ],
           "steerBack": {
             "character": "mom",
-            "hanzi": "这么晚！工作那么忙，要好好吃饭。",
-            "pinyin": "zhème wǎn! gōngzuò nàme máng, yào hǎohǎo chīfàn.",
-            "english": "So late! With work that busy, you need to eat properly."
+            "hanzi": "七点到家，吃饭太晚了。工作那么忙，要好好吃饭。",
+            "pinyin": "qī diǎn dào jiā, chīfàn tài wǎn le. gōngzuò nàme máng, yào hǎohǎo chīfàn.",
+            "english": "Home at seven means eating too late. With work that busy, you need to eat properly."
           }
         }
       }
@@ -127,18 +127,18 @@
       "character": "mom",
       "position": 5,
       "hanzi": "对了，你最近有没有女朋友？",
-      "pinyin": "duì le, nǐ zuìjìn yǒu méi yǒu nǚ péngyou?",
+      "pinyin": "duì le, nǐ zuìjìn yǒu méi yǒu nǚpéngyou?",
       "english": "By the way, have you got a girlfriend lately?",
       "variations": {
         "paraphrase": {
           "hanzi": "对了，你现在有女朋友了吗？",
-          "pinyin": "duì le, nǐ xiànzài yǒu nǚ péngyou le ma?",
+          "pinyin": "duì le, nǐ xiànzài yǒu nǚpéngyou le ma?",
           "english": "By the way, do you have a girlfriend now?"
         },
         "swap": {
           "changes": "who is asking: Mom's own question becomes a rumor from your sister",
           "hanzi": "对了，你妹妹说你有女朋友了，是真的吗？",
-          "pinyin": "duì le, nǐ mèimei shuō nǐ yǒu nǚ péngyou le, shì zhēn de ma?",
+          "pinyin": "duì le, nǐ mèimei shuō nǐ yǒu nǚpéngyou le, shì zhēn de ma?",
           "english": "By the way, your sister says you have a girlfriend. Is it true?",
           "reply": {
             "hanzi": "不是真的！妹妹是说着玩儿的。这个鱼真好吃！",
@@ -276,7 +276,7 @@
           "steerBack": {
             "character": "mom",
             "hanzi": "那你也要快一点儿。我说真的，爸爸和我都希望你有个家。",
-            "pinyin": "nà nǐ yě yào kuài yì diǎnr. wǒ shuō zhēn de, bàba hé wǒ dōu xīwàng nǐ yǒu ge jiā.",
+            "pinyin": "nà nǐ yě yào kuài yìdiǎnr. wǒ shuō zhēn de, bàba hé wǒ dōu xīwàng nǐ yǒu ge jiā.",
             "english": "Then you should hurry up a bit. I'm serious, your dad and I want you to have a family of your own."
           }
         }
@@ -287,7 +287,7 @@
       "character": "kid",
       "position": 10,
       "hanzi": "好好好，我知道了。有了女朋友，我第一个告诉你。",
-      "pinyin": "hǎo hǎo hǎo, wǒ zhīdao le. yǒu le nǚ péngyou, wǒ dì yī ge gàosu nǐ.",
+      "pinyin": "hǎo hǎo hǎo, wǒ zhīdao le. yǒu le nǚpéngyou, wǒ dì yī ge gàosu nǐ.",
       "english": "Okay, okay, okay, I know. When I have a girlfriend, you'll be the first to hear."
     }
   ],
