@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Second Lead Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Noto+Serif+SC:wght@500&family=Literata:ital,wght@0,400;1,400&family=Caveat:wght@500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --desk: #e4dccc; --desk-2: #d8cfbd;
+  --paper: #fcf9f2; --paper-2: #f3eee3; --edge: #e2d9c7; --ink: #1d1a16; --ink-2: #5d564c;
+  --rule: #ddd3c1; --slip: #e8dfcc; --slip-edge: #cfc3ab; --shadow: rgba(70,50,20,.2);
+  --hl: rgba(255,208,50,.45); --pencil: #6b665e;
+  --t1: #c2392b; --t2: #c27a00; --t3: #2e7d4f; --t4: #2a5ea8; --t5: #8a8378;
+  --mono: 'Courier Prime', ui-monospace, monospace;
+  --han: 'Noto Serif SC', 'Songti SC', serif;
+  --serif: 'Literata', Georgia, serif;
+  --hand: 'Caveat', cursive;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --desk: #131110; --desk-2: #1b1815;
+    --paper: #24201a; --paper-2: #2b261f; --edge: #3a3329; --ink: #ebe3d4; --ink-2: #a89f90;
+    --rule: #3c352b; --slip: #322b22; --slip-edge: #4a4034; --shadow: rgba(0,0,0,.55);
+    --hl: rgba(255,200,60,.17); --pencil: #b3aa9b;
+    --t1: #f0705f; --t2: #e8a33a; --t3: #5fbf86; --t4: #6f9ff0; --t5: #9c9488;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --desk: #131110; --desk-2: #1b1815;
+  --paper: #24201a; --paper-2: #2b261f; --edge: #3a3329; --ink: #ebe3d4; --ink-2: #a89f90;
+  --rule: #3c352b; --slip: #322b22; --slip-edge: #4a4034; --shadow: rgba(0,0,0,.55);
+  --hl: rgba(255,200,60,.17); --pencil: #b3aa9b;
+  --t1: #f0705f; --t2: #e8a33a; --t3: #5fbf86; --t4: #6f9ff0; --t5: #9c9488;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--desk); color: var(--ink); font-family: var(--serif); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+.app { max-width: 40rem; margin: 0 auto; min-height: 100%; position: relative; }
+.screen { display: none; }
+.screen.on { display: block; }
+.hl { background: linear-gradient(transparent 12%, var(--hl) 12%, var(--hl) 88%, transparent 88%); box-decoration-break: clone; -webkit-box-decoration-break: clone; padding: 0 2px; }
+
+/* staple: drawn through the top-left corner of a packet */
+.staple { position: absolute; left: 12px; top: 16px; width: 28px; height: 5px; border-radius: 1.5px; transform: rotate(-38deg); background: linear-gradient(#fdfdfd, #8c8f94 45%, #5d6066 70%, #b5b8bd); box-shadow: 0 1px 0 rgba(255,255,255,.4) inset, 1px 2px 2px rgba(0,0,0,.4); z-index: 200; pointer-events: none; }
+:root[data-theme="dark"] .staple { background: linear-gradient(#bdbdbd, #5c5c5c 60%, #8a8a8a); }
+
+/* ---------- shelf ---------- */
+.shelf { padding: 28px 16px 48px; }
+.brand { font-family: var(--mono); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: 14px; margin: 0 0 24px; }
+.continue { display: flex; width: 100%; text-align: left; align-items: center; gap: 14px; padding: 16px; background: var(--paper); border-radius: 2px; margin-bottom: 30px; box-shadow: 0 1px 2px var(--shadow), 0 6px 16px var(--shadow); }
+.continue .k { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); }
+.continue .t { font-size: 18px; margin-top: 2px; }
+.continue .arrow { margin-left: auto; font-family: var(--mono); font-size: 20px; }
+.shelf h2 { font-family: var(--mono); font-size: 12px; font-weight: 400; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-2); margin: 0 0 14px; }
+.covers { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 22px 18px; }
+.cover { position: relative; aspect-ratio: 3/4; background: var(--paper); border-radius: 1px; padding: 30px 14px 14px 16px; text-align: left; display: flex; flex-direction: column;
+  box-shadow: 2px 3px 0 -1px var(--paper-2), 2px 3px 0 0 var(--edge), 4px 6px 0 -1px var(--paper-2), 4px 6px 0 0 var(--edge), 6px 9px 0 -1px var(--paper-2), 6px 9px 0 0 var(--edge), 0 10px 22px var(--shadow);
+  transition: transform .2s; }
+.cover:hover { transform: translateY(-3px) rotate(-.4deg); }
+.cover .staple { left: 6px; top: 10px; width: 20px; }
+.cover .ct { font-family: var(--mono); font-weight: 700; text-transform: uppercase; font-size: 15px; letter-spacing: .04em; line-height: 1.25; text-decoration: underline; text-underline-offset: 3px; }
+.cover .cs { font-size: 12px; color: var(--ink-2); font-style: italic; margin-top: 8px; line-height: 1.35; }
+.cover .cc { font-family: var(--mono); font-size: 11px; color: var(--ink-2); margin-top: auto; text-transform: uppercase; }
+.pips { display: flex; gap: 3px; margin-top: 8px; }
+.pip { width: 10px; height: 10px; border: 1px solid var(--pencil); border-radius: 1px; }
+.pip.f { background: var(--pencil); }
+.cover .cl { font-family: var(--hand); font-size: 16px; color: var(--pencil); margin-top: 4px; }
+.cover.blank { background: transparent; border: 1.5px dashed var(--ink-2); opacity: .55; box-shadow: none; align-items: center; justify-content: center; text-align: center; }
+.cover.blank .ct { font-weight: 400; text-decoration: none; }
+
+/* ---------- packet ---------- */
+.take.on { height: 100vh; height: 100dvh; display: flex; flex-direction: column; }
+.topbar { display: flex; align-items: center; gap: 10px; padding: 12px 16px; font-family: var(--mono); font-size: 13px; }
+.topbar .ti { text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar .hc { margin-left: auto; font-family: var(--hand); font-size: 17px; color: var(--pencil); white-space: nowrap; }
+.pnav { display: flex; align-items: center; gap: 2px; white-space: nowrap; }
+.pnav button { padding: 4px 8px; font-family: var(--mono); }
+.pnav button:disabled { opacity: .25; cursor: default; }
+.back { font-family: var(--mono); font-size: 14px; color: var(--ink-2); padding: 6px 0; }
+.packet { flex: 1; min-height: 0; position: relative; margin: 2px 26px 18px 16px; perspective: 1800px; perspective-origin: 50% 0; }
+.page { position: absolute; inset: 0; background: var(--paper); border-radius: 1px; overflow-y: auto; overflow-x: hidden; scroll-behavior: smooth;
+  padding: 40px 18px 28px 12px; transform-origin: 50% 0; backface-visibility: hidden;
+  box-shadow: 0 1px 1px var(--shadow), 0 8px 24px var(--shadow);
+  transition: transform .85s cubic-bezier(.45,.05,.3,1), opacity .2s ease 0s, visibility 0s 0s; }
+.page.under { overflow: hidden; transform: translate(calc(var(--d) * 3px), calc(var(--d) * 4px)) rotate(calc(var(--d) * .45deg)); transform-origin: 0 0; }
+.page.under > * { visibility: hidden; }
+.page.flipped { transform: rotateX(172deg); opacity: 0; visibility: hidden; pointer-events: none;
+  transition: transform .85s cubic-bezier(.45,.05,.3,1), opacity .2s ease .6s, visibility 0s .85s; }
+.shade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,.28)); opacity: 0; transition: opacity .85s; z-index: 5; }
+.page.flipped .shade { opacity: 1; }
+.pnum { position: absolute; top: 16px; right: 18px; font-family: var(--mono); font-size: 13px; }
+.phead { position: absolute; top: 16px; left: 44px; font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); }
+.contd { text-align: center; font-family: var(--mono); font-size: 12px; color: var(--ink-2); letter-spacing: .06em; margin-top: 8px; }
+
+/* title page */
+.tp { text-align: center; padding: 6vh 10px 10px; max-width: 26rem; margin: 0 auto; }
+.tp h1 { font-family: var(--mono); font-weight: 700; text-transform: uppercase; font-size: 26px; letter-spacing: .06em; text-decoration: underline; text-underline-offset: 6px; margin: 0; }
+.tp .by { font-style: italic; color: var(--ink-2); margin: 16px 0 4px; }
+.tp .meta { font-family: var(--mono); font-size: 13px; color: var(--ink-2); }
+.tp .log { margin: 26px 0 32px; line-height: 1.6; }
+.cast-h { font-family: var(--mono); text-transform: uppercase; letter-spacing: .1em; font-size: 13px; margin-bottom: 10px; text-decoration: underline; text-underline-offset: 4px; }
+.cast { display: flex; flex-direction: column; gap: 4px; text-align: left; }
+.castrow { display: flex; align-items: baseline; gap: 8px; width: 100%; padding: 10px 8px; border-radius: 2px; }
+.castrow:hover { background: var(--paper-2); }
+.castrow .n { font-family: var(--mono); font-weight: 700; text-transform: uppercase; }
+.castrow .dots { flex: 1; border-bottom: 1.5px dotted var(--ink-2); transform: translateY(-4px); }
+.castrow .d { font-style: italic; color: var(--ink-2); font-size: 14px; }
+.castrow.pick .n { background: linear-gradient(transparent 10%, var(--hl) 10%, var(--hl) 90%, transparent 90%); padding: 0 3px; }
+.pickhint { font-family: var(--hand); font-size: 18px; color: var(--pencil); margin-top: 8px; min-height: 24px; }
+.begin { margin-top: 22px; font-family: var(--mono); font-weight: 700; text-transform: uppercase; letter-spacing: .12em; border: 1.5px solid var(--ink); padding: 12px 34px; border-radius: 2px; }
+.begin:disabled { opacity: .35; cursor: default; }
+.begin:not(:disabled):hover { background: var(--ink); color: var(--paper); }
+
+/* lines */
+.line { position: relative; margin: 0 auto 30px; max-width: 30rem; padding-left: 36px; transition: opacity .35s; }
+.line.past { opacity: .5; } .line.future { opacity: .32; } .line.now { opacity: 1; }
+.line.now::before { content: ''; position: absolute; left: 30px; top: 2px; bottom: 2px; width: 2px; background: var(--ink); opacity: .7; }
+.speaker { font-family: var(--mono); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; font-size: 13px; margin: 0 0 6px 8px; display: flex; align-items: center; gap: 8px; }
+.speaker .you { font-weight: 400; color: var(--ink-2); text-transform: none; letter-spacing: 0; }
+.dlg { padding-left: 8px; }
+.bars { display: inline-flex; gap: 2px; align-items: flex-end; height: 12px; }
+.bars i { width: 3px; background: var(--ink-2); animation: bar .9s ease-in-out infinite; }
+.bars i:nth-child(2) { animation-delay: .15s } .bars i:nth-child(3) { animation-delay: .3s }
+@keyframes bar { 0%,100% { height: 3px } 50% { height: 12px } }
+.part { position: relative; }
+.han { font-family: var(--han); font-size: 23px; line-height: 2.2; }
+.mine .han .w { background: linear-gradient(transparent 50%, var(--hl) 50%, var(--hl) 92%, transparent 92%); }
+ruby { ruby-position: over; }
+rt { font-family: var(--serif); font-size: 11px; letter-spacing: -.01em; }
+.tones rt .t1 { color: var(--t1) } .tones rt .t2 { color: var(--t2) } .tones rt .t3 { color: var(--t3) } .tones rt .t4 { color: var(--t4) } .tones rt .t5 { color: var(--t5) }
+.p { color: var(--ink-2); }
+.eng { font-style: italic; color: var(--ink-2); font-size: 15px; line-height: 1.5; margin-top: 2px; }
+.eng::before { content: '('; } .eng::after { content: ')'; }
+.missed { text-decoration: underline wavy var(--pencil); text-decoration-thickness: 1.5px; text-underline-offset: 7px; text-decoration-skip-ink: none; }
+.slip { position: absolute; inset: -4px -6px; background: var(--slip); border: 1px solid var(--slip-edge); border-radius: 2px; box-shadow: 0 2px 5px var(--shadow); display: flex; align-items: center; justify-content: center; gap: 10px; transform: rotate(-.35deg); transition: transform .3s ease, opacity .3s ease; z-index: 2; }
+.slip:hover { transform: rotate(-.35deg) translateY(-2px); }
+.slip.lift { transform: translate(14px,-18px) rotate(-5deg); opacity: 0; pointer-events: none; }
+.slip .lab { font-family: var(--hand); font-size: 17px; color: var(--pencil); }
+.ticks { display: flex; gap: 9px; align-items: center; }
+.ticks i { width: 1.5px; height: 14px; background: var(--pencil); border-radius: 1px; }
+.ticks i.gap { width: 6px; background: none; }
+.mark { position: absolute; left: 0; top: 24px; width: 28px; display: flex; flex-direction: column; align-items: center; }
+.mark svg { width: 26px; height: 22px; }
+.mark svg path { fill: none; stroke: var(--pencil); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 40; stroke-dashoffset: 40; animation: draw .45s ease forwards; }
+@keyframes draw { to { stroke-dashoffset: 0 } }
+.note { font-family: var(--hand); font-size: 16px; color: var(--pencil); margin-top: 2px; line-height: 1.1; text-align: center; }
+.note button { font-family: var(--hand); font-size: 16px; color: var(--pencil); text-decoration: underline dotted; padding: 0; }
+.heard { font-family: var(--mono); font-size: 12.5px; color: var(--pencil); margin: 6px 0 0 8px; }
+
+/* end page */
+.fin { text-align: center; font-family: var(--han); font-size: 26px; letter-spacing: .3em; margin: 26px 0 8px; }
+.fin small { display: block; font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: var(--ink-2); margin-top: 4px; }
+.endbody { max-width: 28rem; margin: 34px auto 0; padding: 0 6px; }
+.endbody h3 { font-family: var(--mono); font-size: 13px; font-weight: 400; text-transform: uppercase; letter-spacing: .1em; margin: 0 0 14px; }
+.checkin { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.checkin button { position: relative; padding: 14px 4px 10px; border: 1px solid var(--rule); border-radius: 2px; }
+.checkin button b { display: block; font-family: var(--mono); font-size: 11px; font-weight: 400; color: var(--ink-2); }
+.checkin button span { font-size: 15px; }
+.checkin button.sel::after { content: ''; position: absolute; inset: -6px -3px; border: 2px solid var(--pencil); border-radius: 50% 46% 52% 48%; transform: rotate(-3deg); }
+.notefield { width: 100%; margin-top: 14px; min-height: 76px; resize: vertical; background: repeating-linear-gradient(transparent 0 27px, var(--rule) 27px 28px); border: 0; font-family: var(--hand); font-size: 20px; line-height: 28px; color: var(--ink); padding: 0 2px; outline: none; }
+.summary { margin-top: 30px; border-top: 1px solid var(--rule); padding-top: 20px; transition: opacity .4s; }
+.summary.hidden { opacity: 0; pointer-events: none; }
+.stat { display: flex; justify-content: space-between; padding: 6px 0; font-family: var(--mono); font-size: 14px; }
+.stat .dots { flex: 1; border-bottom: 1.5px dotted var(--rule); margin: 0 8px; transform: translateY(-5px); }
+.endbtns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 26px; }
+.endbtns button { flex: 1; min-width: 110px; font-family: var(--mono); font-size: 13px; text-transform: uppercase; letter-spacing: .08em; border: 1.5px solid var(--ink); padding: 11px 8px; border-radius: 2px; }
+.endbtns button.prim { background: var(--ink); color: var(--paper); }
+.skip { font-family: var(--mono); font-size: 12px; color: var(--ink-2); text-decoration: underline; margin-top: 8px; }
+
+/* dock */
+.dock { padding: 0 16px calc(12px + env(safe-area-inset-bottom)); }
+.dock.hide { display: none; }
+.after { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; min-height: 34px; }
+.after button { font-family: var(--mono); font-size: 13px; border-radius: 18px; padding: 7px 14px; background: var(--paper); box-shadow: 0 1px 3px var(--shadow); }
+.dockrow { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
+.side { display: flex; gap: 6px; }
+.side.r { justify-content: flex-end; }
+.ib { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: var(--paper); box-shadow: 0 1px 3px var(--shadow); }
+.ib svg { width: 20px; height: 20px; fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.mic { width: 72px; height: 72px; border-radius: 50%; background: var(--ink); display: grid; place-items: center; position: relative; box-shadow: 0 3px 10px var(--shadow); }
+.mic svg { width: 28px; height: 28px; fill: none; stroke: var(--paper); stroke-width: 2; stroke-linecap: round; }
+.mic.idle { background: var(--paper); }
+.mic.idle svg { stroke: var(--ink-2); }
+.mic.cue::before, .mic.cue::after { content: ''; position: absolute; inset: -2px; border-radius: 50%; border: 2px solid var(--ink); animation: ring 1.6s ease-out infinite; }
+.mic.cue::after { animation-delay: .8s; }
+@keyframes ring { from { transform: scale(1); opacity: .55 } to { transform: scale(1.55); opacity: 0 } }
+.miclabel { text-align: center; font-family: var(--mono); font-size: 12px; color: var(--ink-2); margin-top: 6px; text-transform: uppercase; letter-spacing: .08em; min-height: 16px; }
+
+/* menu sheet */
+.sheet { position: fixed; inset: 0; background: rgba(0,0,0,.25); display: none; align-items: flex-end; justify-content: center; z-index: 300; }
+.sheet.on { display: flex; }
+.sheet .in { background: var(--paper); width: 100%; max-width: 40rem; padding: 18px 16px 26px; border-radius: 10px 10px 0 0; }
+.sheet .row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--rule); width: 100%; text-align: left; }
+.sheet .row:last-child { border-bottom: 0; }
+.sheet .row small { display: block; color: var(--ink-2); font-size: 13px; font-style: italic; }
+.tog { width: 40px; height: 22px; border-radius: 11px; background: var(--rule); position: relative; flex: none; }
+.tog::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--paper); transition: left .15s; }
+.tog.on { background: var(--ink); }
+.tog.on::after { left: 21px; }
+.pair { display: flex; gap: 8px; }
+.pair button { font-family: var(--mono); font-size: 13px; border: 1px solid var(--rule); border-radius: 3px; padding: 6px 10px; }
+
+/* ---------- mockup controls (not part of the design) ---------- */
+.demo { position: fixed; right: 12px; bottom: 12px; z-index: 400; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 12px; color: #222; }
+.demo .tab { background: #ffffffcc; border: 1px dashed #888; border-radius: 6px; padding: 5px 9px; color: #222; }
+.demo .panel { display: none; margin-bottom: 6px; background: #ffffffee; border: 1px dashed #888; border-radius: 8px; padding: 10px; width: 210px; box-shadow: 0 6px 20px rgba(0,0,0,.15); }
+.demo.open .panel { display: block; }
+.demo .panel p { margin: 8px 0 4px; font-weight: 600; color: #555; }
+.demo .panel p:first-child { margin-top: 0; }
+.demo .panel button { border: 1px solid #bbb; border-radius: 4px; padding: 4px 7px; margin: 2px 2px 2px 0; background: #fff; color: #222; font-size: 12px; }
+.demo .panel button.act { background: #222; color: #fff; border-color: #222; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SHELF -->
+  <section class="screen shelf on" id="s-shelf">
+    <p class="brand">Second Lead</p>
+    <button class="continue" data-go="resume">
+      <div>
+        <div class="k">Continue</div>
+        <div class="t">Family dinner, as <span class="hl">Kid</span></div>
+      </div>
+      <span class="arrow">›</span>
+    </button>
+    <h2>Your scripts</h2>
+    <div class="covers">
+      <button class="cover" data-go="title">
+        <span class="staple"></span>
+        <div class="ct">Family dinner</div>
+        <div class="cs">A mother pushes food and asks about your love life.</div>
+        <div class="cc">Mom · Kid</div>
+        <div class="pips"><span class="pip f"></span><span class="pip f"></span><span class="pip f"></span><span class="pip"></span><span class="pip"></span></div>
+        <div class="cl">3 of 5 faded · improv locked</div>
+      </button>
+      <button class="cover" data-go="title">
+        <span class="staple"></span>
+        <div class="ct">Taxi to the train station</div>
+        <div class="cs">You're late, and the driver has opinions about the route.</div>
+        <div class="cc">Driver · Passenger</div>
+        <div class="cl">not started</div>
+      </button>
+      <button class="cover blank" onclick="alert('Import is #10; not part of this mockup.')">
+        <div class="ct">+ Import<br>a script</div>
+      </button>
+    </div>
+  </section>
+
+  <!-- PACKET: title page, script pages, end page -->
+  <section class="screen take" id="s-take">
+    <div class="topbar">
+      <button class="back" data-go="shelf" aria-label="Back to shelf">‹ Shelf</button>
+      <span class="hc" id="hintcount"></span>
+      <span class="pnav" id="pnav"><button id="pprev" aria-label="Previous page">‹</button><span id="plabel"></span><button id="pnext" aria-label="Next page">›</button></span>
+    </div>
+    <div class="packet" id="packet"><span class="staple"></span></div>
+    <div class="dock hide" id="dock">
+      <div class="after" id="after"></div>
+      <div class="dockrow">
+        <div class="side">
+          <button class="ib" id="replay" aria-label="Replay" title="Replay"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/></svg></button>
+          <button class="ib" id="slower" aria-label="Slower" title="Slower"><svg viewBox="0 0 24 24"><path d="M4 18c0-4 3-7 7-7h5"/><circle cx="18" cy="11" r="2"/><path d="M6 18h12"/></svg></button>
+        </div>
+        <button class="mic" id="mic" aria-label="Microphone"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+        <div class="side r">
+          <button class="ib" id="menu" aria-label="Take menu"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+        </div>
+      </div>
+      <div class="miclabel" id="miclabel"></div>
+    </div>
+  </section>
+</div>
+
+<template id="tpl-title">
+  <div class="tp">
+    <h1>Family dinner</h1>
+    <p class="by">an original scene, in the style of a family comedy</p>
+    <p class="meta">HSK 1–2 · 10 lines · 3 pages</p>
+    <p class="log">Mom has made your favorite fish. She wants you to eat more, work less, and tell her whether there's someone special. You would rather talk about the fish.</p>
+    <div class="cast-h">Cast of characters</div>
+    <div class="cast">
+      <button class="castrow" data-role="mom"><span class="n">Mom</span><span class="dots"></span><span class="d">pushes food, asks questions</span></button>
+      <button class="castrow" data-role="kid"><span class="n">Kid</span><span class="dots"></span><span class="d">deflects</span></button>
+    </div>
+    <div class="pickhint" id="pickhint">tap the role you'll play</div>
+    <button class="begin" id="begin" disabled>Begin</button>
+  </div>
+</template>
+
+<template id="tpl-end">
+  <div class="fin">— 完 —<small>END OF SCENE</small></div>
+  <div class="endbody">
+    <h3>How did that take feel?</h3>
+    <div class="checkin" id="checkin">
+      <button data-v="1"><b>1</b><span>rough</span></button>
+      <button data-v="2"><b>2</b><span>shaky</span></button>
+      <button data-v="3"><b>3</b><span>solid</span></button>
+      <button data-v="4"><b>4</b><span>owned it</span></button>
+    </div>
+    <textarea class="notefield" placeholder="a note, if you want…" aria-label="Check-in note"></textarea>
+    <button class="skip" id="skipci">skip</button>
+    <div class="summary hidden" id="summary">
+      <h3>This take</h3>
+      <div class="stat"><span>Lines faded</span><span class="dots"></span><span id="st-f">0</span></div>
+      <div class="stat"><span>Hints used</span><span class="dots"></span><span id="st-h">0</span></div>
+      <div class="stat"><span>Lines missed</span><span class="dots"></span><span id="st-m">0</span></div>
+      <div class="endbtns">
+        <button class="prim" id="again">Again</button>
+        <button id="swap">Swap roles</button>
+        <button data-go="shelf">Back to shelf</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<div class="sheet" id="sheet">
+  <div class="in">
+    <button class="row" id="opt-cue"><span>Auto-cue<small>open the mic when your cue comes</small></span><span class="tog on"></span></button>
+    <button class="row" id="opt-listen"><span>Listen first<small>cover their lines until you've heard them</small></span><span class="tog"></span></button>
+    <div class="row"><span>This line<small>support for the line you're on</small></span><span class="pair"><button id="more">more help</button><button id="less">less help</button></span></div>
+    <button class="row" data-go="shelf"><span>Leave the take</span><span>›</span></button>
+  </div>
+</div>
+
+<div class="demo" id="demo">
+  <div class="panel">
+    <p>When you're on your cue</p>
+    <button id="d-pass">Say it right</button><button id="d-miss">Say it wrong</button>
+    <p>Jump</p>
+    <button id="d-page3">Last page</button><button id="d-end">End page</button>
+    <p>Look</p>
+    <button id="d-theme">Light / dark</button><button id="d-tones" class="act">Tone colors</button>
+    <p>Mode</p>
+    <button id="d-improv">Improv (their lines covered)</button>
+  </div>
+  <button class="tab" id="demotab">Mockup controls ▴</button>
+</div>
+
+<script>
+// Family dinner, from content/scenes/family-dinner.json, split into words by hand.
+// Token: "汉字/pin·yin" (· splits syllables), or bare punctuation.
+const RAW = [
+  ['mom', '多/duō 吃/chī 点儿/diǎnr ， 这个/zhè·ge 鱼/yú 是/shì 你/nǐ 最/zuì 爱/ài 吃/chī 的/de 。', 'Eat more. This fish is your favorite.'],
+  ['kid', '妈/mā ， 我/wǒ 已经/yǐ·jīng 吃/chī 了/le 很/hěn 多/duō 了/le 。', "Mom, I've already eaten a lot."],
+  ['mom', '就/jiù 吃/chī 这么/zhè·me 一点儿/yì·diǎnr ？ 你/nǐ 看/kàn 你/nǐ ， 工作/gōng·zuò 那么/nà·me 忙/máng ， 也/yě 不/bù 好好/hǎo·hǎo 吃饭/chī·fàn 。', "That's all you're eating? Look at you, so busy with work and not even eating properly."],
+  ['kid', '我/wǒ 天天/tiān·tiān 都/dōu 好好/hǎo·hǎo 吃饭/chī·fàn ， 妈/mā ， 你/nǐ 别/bié 说/shuō 了/le 。', 'I eat properly every day. Mom, stop talking about it.'],
+  ['mom', '对了/duì·le ， 你/nǐ 最近/zuì·jìn 有没有/yǒu·méi·yǒu 女朋友/nǚ·péng·you ？', 'By the way, have you got a girlfriend lately?'],
+  ['kid', '妈/mā ， 这个/zhè·ge 鱼/yú 真/zhēn 好吃/hǎo·chī ！ 是/shì 你/nǐ 做/zuò 的/de 吗/ma ？', 'Mom, this fish is so good! Did you make it?'],
+  ['mom', '别/bié 说/shuō 鱼/yú 了/le 。 我/wǒ 问/wèn 你/nǐ 呢/ne ， 你/nǐ 有没有/yǒu·méi·yǒu 喜欢/xǐ·huan 的/de 人/rén ？', "Forget the fish. I'm asking you: is there someone you like?"],
+  ['kid', '有/yǒu ， 有/yǒu ， 有/yǒu ！ 我/wǒ 最/zuì 喜欢/xǐ·huan 的/de 人/rén 就是/jiù·shì 你/nǐ 。', 'Yes, yes, yes! The person I like most is you.'],
+  ['mom', "少来/shǎo·lái ！ 我/wǒ 说/shuō 真的/zhēn·de 。 你/nǐ 也/yě 不/bù 小/xiǎo 了/le ， 我/wǒ 和/hé 你/nǐ 爸/bà 都/dōu 希望/xī·wàng 你/nǐ 有/yǒu 个/ge 家/jiā 。", "Cut it out! I'm serious. You're not young anymore, and your dad and I want you to have a family of your own."],
+  ['kid', '好/hǎo 好/hǎo 好/hǎo ， 我/wǒ 知道/zhī·dao 了/le 。 有/yǒu 了/le 女朋友/nǚ·péng·you ， 我/wǒ 第一/dì·yī 个/ge 告诉/gào·su 你/nǐ 。', "Okay, okay, okay, I know. When I have a girlfriend, you'll be the first to hear."],
+]
+const NAMES = { mom: 'Mom', kid: 'Kid' }
+const ME = 'kid'
+// Support levels from past takes (0 = most help): shows each look in one take.
+const START_LEVEL = { 1: 0, 3: 1, 5: 2, 7: 3, 9: 1 }
+// The packet: title page, script pages of a few exchanges each, end page.
+const PAGES = [{ kind: 'title' }, { kind: 'lines', lines: [0, 1, 2, 3] }, { kind: 'lines', lines: [4, 5, 6, 7] }, { kind: 'lines', lines: [8, 9] }, { kind: 'end' }]
+const SCRIPT_PAGES = PAGES.filter(p => p.kind === 'lines').length
+const END = PAGES.length - 1
+const pageOf = i => PAGES.findIndex(p => p.lines && p.lines.includes(i))
+
+const LINES = RAW.map(([who, toks, en]) => ({
+  who, en,
+  words: toks.split(' ').map(t => { const [h, p] = t.split('/'); return p ? { h, s: p.split('·') } : { h } }),
+}))
+LINES.forEach(l => { l.hanzi = l.words.map(w => w.h).join('') })
+
+const TONE = {}
+;[['āēīōūǖ', 1], ['áéíóúǘ', 2], ['ǎěǐǒǔǚ', 3], ['àèìòùǜ', 4]].forEach(([cs, t]) => [...cs].forEach(c => TONE[c] = t))
+const toneOf = s => { for (const c of s) if (TONE[c]) return TONE[c]; return 5 }
+
+let S
+function fresh() {
+  S = {
+    cur: 0, page: 0, view: 0, phase: 'idle', level: { ...START_LEVEL }, results: {}, lifted: new Set(),
+    hints: 0, faded: 0, missedLines: new Set(), heardOnce: new Set(),
+    autoCue: S ? S.autoCue : true, listenFirst: S ? S.listenFirst : false, improv: S ? S.improv : false,
+  }
+}
+fresh()
+let tones = true
+let timer = null
+
+const $ = id => document.getElementById(id)
+const packet = $('packet')
+
+// build the page elements once; flips are class changes so they animate
+const pageEls = PAGES.map((p, k) => {
+  const el = document.createElement('div')
+  el.className = 'page'
+  el.style.zIndex = 100 - k
+  const head = p.kind === 'lines' ? `<span class="phead">Family dinner — sides</span><span class="pnum">${k}.</span>` : ''
+  el.innerHTML = head + '<div class="body"></div><div class="shade"></div>'
+  packet.appendChild(el)
+  return el
+})
+pageEls[0].querySelector('.body').appendChild($('tpl-title').content.cloneNode(true))
+pageEls[END].querySelector('.body').appendChild($('tpl-end').content.cloneNode(true))
+
+function sylHTML(s) { return s.map(x => `<span class="s t${toneOf(x)}">${x}</span>`).join('') }
+function wordsHTML(l, missed) {
+  return l.words.map((w, i) => w.s
+    ? `<ruby class="w${missed && missed.has(i) ? ' missed' : ''}">${w.h}<rt>${sylHTML(w.s)}</rt></ruby>`
+    : `<span class="p">${w.h}</span>`).join('')
+}
+function ticksHTML(l) {
+  return '<span class="ticks">' + l.words.map(w => w.s ? w.s.map(() => '<i></i>').join('') : '<i class="gap"></i>').join('') + '</span>'
+}
+function slip(key, inner) {
+  return S.lifted.has(key) ? '' : `<button class="slip" data-slip="${key}" aria-label="Lift slip (counts as a hint)">${inner}</button>`
+}
+const CHECK = '<svg viewBox="0 0 26 22"><path d="M3 12 C5 13 7 15 9 18 C12 11 17 6 23 3"/></svg>'
+
+function lineHTML(i) {
+  const l = LINES[i]
+  const mine = l.who === ME
+  const pos = i < S.cur ? 'past' : i === S.cur ? 'now' : 'future'
+  const r = S.results[i]
+  const han = `<div class="han">${wordsHTML(l, r && !r.pass ? r.missed : null)}</div>`
+  const eng = `<div class="eng">${l.en}</div>`
+  let body
+  if (mine) {
+    const lv = S.level[i]
+    if (r || lv === 0) body = han + eng
+    else if (lv === 1) body = han + `<div class="part">${eng}${slip(i + ':en', '<span class="lab">meaning</span>')}</div>`
+    else if (lv === 2) body = `<div class="part">${han}${slip(i + ':zh', '<span class="lab">the words</span>')}</div>` + eng
+    else body = `<div class="part">${han}${eng}${slip(i + ':all', ticksHTML(l))}</div>`
+  } else {
+    const covered = (S.improv || S.listenFirst) && !S.heardOnce.has(i)
+    body = covered ? `<div class="part">${han}${eng}${slip(i + ':them', '<span class="lab">listen…</span>')}</div>` : han + eng
+  }
+  const speaking = i === S.cur && S.phase === 'playing'
+  let mark = ''
+  if (r) mark = r.pass
+    ? `<div class="mark">${CHECK}<div class="note">${r.self ? 'self' : `<button data-tone="${i}">tones ${r.tones}</button>`}</div></div>`
+    : `<div class="mark"><div class="note" style="font-size:22px">?</div></div>`
+  const heard = r && !r.pass ? `<div class="heard">(heard: ${r.heard})</div>` : ''
+  return `<div class="line ${pos}${mine ? ' mine' : ''}">
+    ${mark}
+    <div class="speaker">${NAMES[l.who]}${mine ? '<span class="you">(you)</span>' : ''}${speaking ? '<span class="bars"><i></i><i></i><i></i></span>' : ''}</div>
+    <div class="dlg">${body}</div>${heard}
+  </div>`
+}
+
+function render() {
+  // the packet: pages before the one in view are flipped over the staple, the rest stack beneath it
+  pageEls.forEach((el, k) => {
+    el.classList.toggle('flipped', k < S.view)
+    el.classList.toggle('under', k > S.view)
+    el.style.setProperty('--d', Math.min(k - S.view, 3))
+    const p = PAGES[k]
+    if (p.kind === 'lines') {
+      const more = k < SCRIPT_PAGES ? '<div class="contd">(CONTINUED)</div>' : ''
+      el.querySelector('.body').className = 'body' + (tones ? ' tones' : '')
+      el.querySelector('.body').innerHTML = p.lines.map(lineHTML).join('') + more
+    }
+  })
+  const top = pageEls[S.view], now = top.querySelector('.line.now')
+  if (now) top.scrollTo({ top: now.offsetTop - top.clientHeight / 2 + now.offsetHeight / 2 })
+
+  const onScript = PAGES[S.view].kind === 'lines'
+  $('dock').classList.toggle('hide', S.page === 0 || S.page === END)
+  $('pnav').style.visibility = S.page === 0 ? 'hidden' : 'visible'
+  $('plabel').textContent = onScript ? `p. ${S.view} of ${SCRIPT_PAGES}` : S.view === END ? 'end' : 'title'
+  $('pprev').disabled = S.view <= 1
+  $('pnext').disabled = S.view >= S.page
+  $('hintcount').textContent = S.hints ? `hints ${'|'.repeat(Math.min(S.hints, 12))}` : ''
+
+  const reviewing = S.view !== S.page
+  const mic = $('mic'), lab = $('miclabel'), after = $('after')
+  mic.className = 'mic' + (reviewing ? ' idle' : S.phase === 'listening' ? ' cue' : S.phase === 'paused' || S.phase === 'miss' ? '' : ' idle')
+  lab.textContent = reviewing ? 'Back to your page' : ({
+    playing: `${NAMES[LINES[S.cur]?.who] || ''} is speaking`, listening: 'Your cue — speak', paused: 'Tap to speak',
+    pass: 'Passed', miss: 'Tap to try again',
+  }[S.phase] || '')
+  after.innerHTML = !reviewing && (S.phase === 'pass' || S.phase === 'miss')
+    ? `${S.phase === 'miss' ? '<button id="misheard">It misheard me</button>' : ''}<button id="flip">${S.phase === 'pass' ? "That wasn't right" : 'I said it right'}</button>`
+    : ''
+}
+
+function clearT() { clearTimeout(timer); timer = null; if (window.speechSynthesis) speechSynthesis.cancel() }
+function speak(text, rate, done) {
+  let finished = false
+  const fin = () => { if (!finished) { finished = true; done && done() } }
+  const est = Math.max(1600, text.length * 260 / rate)
+  if (window.speechSynthesis && window.SpeechSynthesisUtterance) {
+    try {
+      const u = new SpeechSynthesisUtterance(text)
+      u.lang = 'zh-CN'; u.rate = rate
+      const v = speechSynthesis.getVoices().find(v => /zh[-_]CN/i.test(v.lang))
+      if (v) u.voice = v
+      u.onend = fin; u.onerror = fin
+      speechSynthesis.cancel(); speechSynthesis.speak(u)
+      timer = setTimeout(fin, est + 2500)
+      return
+    } catch (e) {}
+  }
+  timer = setTimeout(fin, est)
+}
+
+function turnTo(k, then) {
+  const flips = k !== S.view
+  S.page = S.view = k; render()
+  timer = setTimeout(then || (() => {}), flips ? 900 : 0)
+}
+function enterLine() {
+  clearT()
+  if (S.cur >= LINES.length) { S.phase = 'idle'; turnTo(END); return }
+  const k = pageOf(S.cur)
+  if (k !== S.page) { turnTo(k, enterLine); return }
+  const l = LINES[S.cur]
+  if (l.who === ME) { S.phase = S.autoCue ? 'listening' : 'paused'; render() }
+  else {
+    S.phase = 'playing'; render()
+    speak(l.hanzi, 1, () => { S.heardOnce.add(S.cur); S.cur++; enterLine() })
+  }
+}
+
+function attempt(pass) {
+  if (S.view !== S.page || (S.phase !== 'listening' && S.phase !== 'paused')) return
+  const i = S.cur, l = LINES[i]
+  const idx = l.words.map((w, k) => w.s ? k : -1).filter(k => k >= 0)
+  const syl = l.words.reduce((n, w) => n + (w.s ? w.s.length : 0), 0)
+  if (pass) {
+    S.results[i] = { pass: true, tones: `${syl - (i % 3 === 0 ? 1 : 2)}/${syl}` }
+    S.phase = 'pass'; render()
+    timer = setTimeout(() => advance(i), 2000)
+  } else {
+    const missed = new Set(idx.slice(-3, -1))
+    const heard = l.words.filter((w, k) => w.s && !missed.has(k)).map(w => w.s.join('')).join(' ') + ' …'
+    S.results[i] = { pass: false, missed, heard }
+    S.missedLines.add(i)
+    S.phase = 'miss'; render()
+  }
+}
+function advance(i) {
+  if (S.results[i]?.pass) { S.faded++; S.level[i] = Math.min(3, S.level[i] + 1) }
+  S.cur = i + 1; enterLine()
+}
+
+function startTake() { const keep = S; fresh(); S.view = S.page = keep.view; turnTo(1, enterLine) }
+function showSummary() {
+  $('st-f').textContent = S.faded; $('st-h').textContent = S.hints; $('st-m').textContent = S.missedLines.size
+  $('summary').classList.remove('hidden')
+}
+
+function go(name) {
+  clearT()
+  $('sheet').classList.remove('on')
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === (name === 'shelf' ? 's-shelf' : 's-take')))
+  if (name === 'title') { fresh(); resetTitle(); render() }
+  if (name === 'resume') { fresh(); render(); requestAnimationFrame(() => turnTo(1, enterLine)) }
+}
+function resetTitle() {
+  document.querySelectorAll('.castrow').forEach(x => x.classList.toggle('pick', x.dataset.role === ME))
+  $('begin').disabled = false
+  $('pickhint').textContent = "you're playing Kid"
+  $('summary').classList.add('hidden')
+  $('checkin').querySelectorAll('button').forEach(x => x.classList.remove('sel'))
+}
+
+// events
+document.addEventListener('click', e => {
+  const t = e.target
+  const g = t.closest('[data-go]'); if (g) { go(g.dataset.go); return }
+  const sl = t.closest('[data-slip]')
+  if (sl) { sl.classList.add('lift'); S.lifted.add(sl.dataset.slip); S.hints++; setTimeout(render, 280); return }
+  if (t.closest('[data-tone]')) { alert('Tone detail opens here (#11, #12): each syllable, its tone color, and your pitch over the target.'); return }
+  const cr = t.closest('.castrow')
+  if (cr) {
+    document.querySelectorAll('.castrow').forEach(x => x.classList.toggle('pick', x === cr))
+    $('begin').disabled = cr.dataset.role !== ME
+    $('pickhint').textContent = cr.dataset.role === ME ? "you're playing Kid" : 'this mockup only plays Kid'
+    return
+  }
+  if (t.closest('#begin')) { startTake(); return }
+  const ci = t.closest('#checkin button')
+  if (ci) { $('checkin').querySelectorAll('button').forEach(x => x.classList.toggle('sel', x === ci)); showSummary(); return }
+  if (t.closest('#skipci')) { showSummary(); return }
+  if (t.closest('#again')) { clearT(); resetTitle(); startTake(); return }
+  if (t.closest('#swap')) { clearT(); fresh(); resetTitle(); render(); return }
+  if (t.id === 'misheard') { delete S.results[S.cur]; S.missedLines.delete(S.cur); S.phase = 'listening'; render(); return }
+  if (t.id === 'flip') {
+    clearT()
+    if (S.phase === 'pass') { S.results[S.cur] = { pass: false, missed: new Set(), heard: '(you marked this wrong)' }; S.missedLines.add(S.cur); S.phase = 'miss'; render() }
+    else { S.results[S.cur] = { pass: true, tones: '—', self: true }; S.missedLines.delete(S.cur); S.phase = 'pass'; render(); timer = setTimeout(() => advance(S.cur), 1800) }
+  }
+})
+$('mic').onclick = () => {
+  if (S.view !== S.page) { S.view = S.page; render(); return }
+  if (S.phase === 'listening') S.phase = 'paused'
+  else if (S.phase === 'paused') S.phase = 'listening'
+  else if (S.phase === 'miss') { delete S.results[S.cur]; S.phase = 'listening' }
+  else return
+  render()
+}
+$('pprev').onclick = () => { if (S.view > 1) { S.view--; render() } }
+$('pnext').onclick = () => { if (S.view < S.page) { S.view++; render() } }
+function lastTheirs() { for (let k = S.cur; k >= 0; k--) if (LINES[k] && LINES[k].who !== ME) return k; return 0 }
+$('replay').onclick = () => { if (S.phase === 'playing') return; S.hints++; render(); speak(LINES[lastTheirs()].hanzi, 1) }
+$('slower').onclick = () => { if (S.phase === 'playing') return; S.hints++; render(); speak(LINES[lastTheirs()].hanzi, .6) }
+$('menu').onclick = () => $('sheet').classList.add('on')
+$('sheet').onclick = e => { if (e.target.id === 'sheet') $('sheet').classList.remove('on') }
+$('opt-cue').onclick = () => { S.autoCue = !S.autoCue; $('opt-cue').querySelector('.tog').classList.toggle('on', S.autoCue) }
+$('opt-listen').onclick = () => { S.listenFirst = !S.listenFirst; $('opt-listen').querySelector('.tog').classList.toggle('on', S.listenFirst); render() }
+$('more').onclick = () => { const i = S.cur; if (LINES[i]?.who === ME) { S.level[i] = Math.max(0, S.level[i] - 1); render() } }
+$('less').onclick = () => { const i = S.cur; if (LINES[i]?.who === ME) { S.level[i] = Math.min(3, S.level[i] + 1); render() } }
+
+// mockup controls
+$('demotab').onclick = () => $('demo').classList.toggle('open')
+$('d-pass').onclick = () => attempt(true)
+$('d-miss').onclick = () => attempt(false)
+$('d-page3').onclick = () => { clearT(); S.cur = 7; S.phase = 'listening'; S.heardOnce.add(6); enterLine() }
+$('d-end').onclick = () => { clearT(); S.cur = LINES.length; enterLine() }
+$('d-theme').onclick = () => {
+  const dark = document.documentElement.dataset.theme
+    ? document.documentElement.dataset.theme === 'dark'
+    : matchMedia('(prefers-color-scheme: dark)').matches
+  document.documentElement.dataset.theme = dark ? 'light' : 'dark'
+}
+$('d-tones').onclick = e => { tones = !tones; e.target.classList.toggle('act', tones); render() }
+$('d-improv').onclick = e => { S.improv = !S.improv; e.target.classList.toggle('act', S.improv); render() }
+render()
+</script>
+</body>
+</html>
