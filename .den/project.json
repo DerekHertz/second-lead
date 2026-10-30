@@ -1,0 +1,5 @@
+{
+  "test": "npx vitest run",
+  "codePaths": ["src", "supabase", "content"],
+  "guardrailPaths": ["supabase/migrations", "supabase/functions", "vite.config.ts", "package.json", "package-lock.json"]
+}
