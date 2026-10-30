@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import family from '../../content/scenes/family-dinner.json'
 import taxi from '../../content/scenes/taxi.json'
+import { fixtureScenes } from '../fixtureScenes'
 import { PASS_THRESHOLD, flipVerdict, judgeLine, settleAttempt } from './judge'
 
 // A 12-syllable line assembled from the family-dinner scene (no final particle).
@@ -16,8 +17,8 @@ describe('Pass: the right sound with the wrong character', () => {
     expect(judgeLine({ hanzi: '我走左边的路' }, '我走作边的路').passed).toBe(true)
   })
 
-  it('ignores punctuation, spaces, digits and Latin noise on both sides', () => {
-    const verdict = judgeLine({ hanzi: '您好，去哪儿？' }, ' 您好 hello, 去哪儿 123 ！')
+  it('ignores punctuation, spaces and Latin noise on both sides', () => {
+    const verdict = judgeLine({ hanzi: '您好，去哪儿？' }, ' 您好 hello, 去哪儿 ！')
     expect(verdict.passed).toBe(true)
     expect(verdict.syllable_match).toBe(1)
   })
@@ -238,6 +239,104 @@ describe('Pass: the starter scenes', () => {
       const other = lines.find((l) => l.id !== line.id && l.hanzi.length > 6)!
       expect(judgeLine({ hanzi: line.hanzi, pinyin: line.pinyin }, other.hanzi).passed).toBe(false)
     }
+  })
+})
+
+describe('Pass: every scripted line said as written, authored pinyin or not', () => {
+  const fixtureLines = fixtureScenes.flatMap((s) =>
+    s.lines.map((l, i) => ({
+      id: `${s.id}-${i + 1}`,
+      hanzi: l.words.map((w) => w.hanzi).join(''),
+      pinyin: l.words.map((w) => w.pinyin).join(' '),
+    })),
+  )
+  const all = [...taxi.lines, ...family.lines, ...fixtureLines]
+
+  it.each(all.map((l) => [l.id, l] as const))('%s: its characters against its own authored pinyin', (_id, line) => {
+    const verdict = judgeLine({ hanzi: line.hanzi, pinyin: line.pinyin }, line.hanzi)
+    expect(verdict.syllable_match).toBe(1)
+    expect(verdict.passed).toBe(true)
+  })
+})
+
+describe('Pass: words that look like a final particle but are not', () => {
+  it('keeps the second syllable of reduplicated kinship words, from authored pinyin and from characters', () => {
+    expect(judgeLine({ hanzi: '妈妈。', pinyin: 'māma' }, '妈妈').syllable_match).toBe(1)
+    expect(judgeLine({ hanzi: '爸爸', pinyin: 'bàba' }, '爸爸').syllable_match).toBe(1)
+    expect(judgeLine({ hanzi: '吃了，妈妈。', pinyin: 'chī le māma' }, '吃了妈妈').syllable_match).toBe(1)
+    expect(judgeLine({ hanzi: '爸爸' }, '爸爸').syllable_match).toBe(1)
+    expect(judgeLine({ hanzi: '奶奶、爷爷', pinyin: 'nǎinai, yéye' }, '奶奶爷爷').syllable_match).toBe(1)
+  })
+
+  it('does not let half of a reduplicated word pass for the whole word', () => {
+    expect(judgeLine({ hanzi: '妈妈', pinyin: 'māma' }, '妈').passed).toBe(false)
+    expect(judgeLine({ hanzi: '妈妈' }, '妈').passed).toBe(false)
+    expect(judgeLine({ hanzi: '吃了，妈妈。', pinyin: 'chī le māma' }, '吃了妈').passed).toBe(false)
+  })
+
+  it('treats a final particle alike from authored pinyin and from characters', () => {
+    for (const [hanzi, pinyin, said] of [
+      ['你好吗', 'nǐ hǎo ma', '你好'],
+      ['你好', undefined, '你好吗'],
+      ['好吧', 'hǎo ba', '好'],
+      ['我问你呢', 'wǒ wèn nǐ ne', '我问你'],
+      ['我问你', undefined, '我问你呢'],
+    ] as const) {
+      expect(judgeLine({ hanzi, pinyin }, said).syllable_match).toBe(1)
+    }
+  })
+})
+
+describe('Pass: numerals in what was heard', () => {
+  it('reads Arabic numerals as the Chinese numbers they stand for', () => {
+    expect(judgeLine({ hanzi: '三点了' }, '3点了').syllable_match).toBe(1)
+    expect(judgeLine({ hanzi: '东门到了，三十块。' }, '东门到了，30块').syllable_match).toBe(1)
+    expect(judgeLine({ hanzi: '十点', pinyin: 'shí diǎn' }, '10点').syllable_match).toBe(1)
+    expect(judgeLine({ hanzi: '十二点' }, '12点').syllable_match).toBe(1)
+    expect(judgeLine({ hanzi: '二十二块' }, '22块').syllable_match).toBe(1)
+    expect(judgeLine({ hanzi: '一百块' }, '100块').syllable_match).toBe(1)
+    expect(judgeLine({ hanzi: '一百零五块' }, '105块').syllable_match).toBe(1)
+    expect(judgeLine({ hanzi: '一百一十块' }, '110块').syllable_match).toBe(1)
+    expect(judgeLine({ hanzi: '三千五百块' }, '3500块').syllable_match).toBe(1)
+    expect(judgeLine({ hanzi: '三十块', pinyin: 'sānshí kuài' }, '30块').syllable_match).toBe(1)
+  })
+
+  it('reads a long or zero-led number digit by digit, like a phone number', () => {
+    expect(judgeLine({ hanzi: '一二三四五' }, '12345').syllable_match).toBe(1)
+    expect(judgeLine({ hanzi: '零零七' }, '007').syllable_match).toBe(1)
+  })
+
+  it('accepts 二 or 两 for a 2 that stands alone or leads a hundred or thousand', () => {
+    for (const hanzi of ['我要二个', '我要两个']) {
+      expect(judgeLine({ hanzi }, '我要2个').syllable_match).toBe(1)
+    }
+    expect(judgeLine({ hanzi: '两百块' }, '200块').syllable_match).toBe(1)
+    expect(judgeLine({ hanzi: '二百块' }, '200块').syllable_match).toBe(1)
+    expect(judgeLine({ hanzi: '两千块' }, '2000块').syllable_match).toBe(1)
+    expect(judgeLine({ hanzi: '我要两个', pinyin: 'wǒ yào liǎng ge' }, '我要2个').tone_score).toBe(1)
+  })
+
+  it('does not accept 两 for the 2 in 二十, nor a different number', () => {
+    expect(judgeLine({ hanzi: '两十块' }, '20块').syllable_match).toBeLessThan(1)
+    expect(judgeLine({ hanzi: '三十块' }, '20块').passed).toBe(false)
+    expect(judgeLine({ hanzi: '三十块' }, '3块').passed).toBe(false)
+  })
+})
+
+describe('Tones: only neutral syllables matched', () => {
+  it('scores 1, since a neutral tone is not held against anyone', () => {
+    // 妈 (mā) said where only a neutral-tone 吗 is expected: nothing to score, nothing wrong.
+    const verdict = judgeLine({ hanzi: '吗' }, '妈')
+    expect(verdict.passed).toBe(true)
+    expect(verdict.tone_score).toBe(1)
+  })
+})
+
+describe('Authored pinyin with the erhua r set apart', () => {
+  it('reads "zhè r" as zhè with an erhua suffix', () => {
+    // Converted from the characters 长 would read cháng; only the authored zhǎng matches 涨.
+    expect(judgeLine({ hanzi: '长儿', pinyin: 'zhǎng r' }, '涨').syllable_match).toBe(1)
+    expect(judgeLine({ hanzi: '这儿', pinyin: 'zhè r' }, '这儿').syllable_match).toBe(1)
   })
 })
 
