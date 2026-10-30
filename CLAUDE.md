@@ -44,3 +44,9 @@ A ticket is a GitHub issue; its status is a label. `den board` does not apply he
 
 - PR bodies follow `den:pr-writing` (What changes, System map, Risk, Evidence). `npm run pr-map` doesn't exist here: the System map is `docviz pr <steps.json> --pr <url> --glossary CONTEXT.md`, posted as its own PR comment; the body's System map section links to it.
 - PRs are **stacked**: each ticket's branch is based on the branch below it, and the bottom PR targets `main`. Once a PR is green and reviewed, the chief of staff merges it into the branch below. Only the user merges the bottom PR into `main`.
+
+## Browser tests (e2e)
+
+- `npm run e2e` builds the app, serves the build with `vite preview` and runs the Playwright suite in `e2e/` headless. Run `npx playwright install chromium` once per machine first. CI runs it as the `e2e` job.
+- Chromium starts with a fake microphone and the microphone permission granted (set in `playwright.config.ts`), so speech tests need no extra setup.
+- Playwright is installed, so `docviz pr` now syntax-checks its diagrams.
