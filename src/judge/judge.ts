@@ -28,6 +28,11 @@ export type ExpectedLine = { hanzi: string; pinyin?: string }
 /** What the learner does with a verdict: take it, say it was misheard, or flip it. */
 export type Review = 'accept' | 'misheard' | 'flip'
 
+/** Two syllables sound the same when their toneless sounds are, or one is a numeral's second reading. */
+function sameSound(a: Syllable, b: Syllable): boolean {
+  return a.base === b.base || a.alias === b.base || b.alias === a.base
+}
+
 type Pair = { expected: number; heard: number }
 
 /** Align two syllable lists by toneless sound (insert, drop or swap one syllable at cost 1). */
@@ -39,7 +44,7 @@ function align(expected: Syllable[], heard: Syllable[]): { errors: number; match
   for (let j = 0; j <= m; j++) cost[0]![j] = j
   for (let i = 1; i <= n; i++) {
     for (let j = 1; j <= m; j++) {
-      const same = expected[i - 1]!.base === heard[j - 1]!.base
+      const same = sameSound(expected[i - 1]!, heard[j - 1]!)
       cost[i]![j] = Math.min(
         cost[i - 1]![j - 1]! + (same ? 0 : 1),
         cost[i - 1]![j]! + 1,
@@ -51,7 +56,7 @@ function align(expected: Syllable[], heard: Syllable[]): { errors: number; match
   let i = n
   let j = m
   while (i > 0 && j > 0) {
-    const same = expected[i - 1]!.base === heard[j - 1]!.base
+    const same = sameSound(expected[i - 1]!, heard[j - 1]!)
     if (cost[i]![j] === cost[i - 1]![j - 1]! + (same ? 0 : 1)) {
       if (same) matched.push({ expected: i - 1, heard: j - 1 })
       i--
@@ -68,6 +73,7 @@ const YI_TONES = new Set([1, 2, 4])
 
 /** Whether the tone heard is right for the one expected, allowing for 不, 一 and third-tone sandhi. */
 function toneRight(expected: Syllable, heard: Syllable, next: Syllable | undefined): boolean {
+  if (expected.base !== heard.base) return true // 二 for 两: no tone to compare
   if (expected.tone === heard.tone) return true
   if (expected.base === 'bu' && BU_TONES.has(expected.tone) && BU_TONES.has(heard.tone)) return true
   if (expected.base === 'yi' && YI_TONES.has(expected.tone) && YI_TONES.has(heard.tone)) return true
@@ -97,10 +103,10 @@ function expectedSyllables(line: ExpectedLine): Syllable[] {
 export function judgeLine(expected: ExpectedLine, heardText: string): Verdict {
   const want = withoutTrailingParticles(expectedSyllables(expected))
   const got = withoutTrailingParticles(syllablesFromHanzi(heardText))
-  const longest = Math.max(want.length, got.length)
   if (want.length === 0 || got.length === 0) {
     return { heard_text: heardText, syllable_match: 0, tone_score: 0, passed: false, judged_by: 'match' }
   }
+  const longest = Math.max(want.length, got.length)
   const { errors, matched } = align(want, got)
   const syllable_match = (longest - errors) / longest
   return {

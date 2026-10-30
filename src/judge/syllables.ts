@@ -3,9 +3,10 @@ import { pinyin } from 'pinyin-pro'
 /**
  * One spoken syllable, as the matcher sees it: the toneless pinyin `base` (ü written v),
  * the `tone` (1–4, or 0 for neutral/unmarked) and whether it is a sentence-final `particle`
- * that may be added or dropped without failing a line.
+ * that may be added or dropped without failing a line. An `alias` is a second sound that
+ * counts as the same syllable (a numeral read 2 may be said 二 or 两).
  */
-export type Syllable = { base: string; tone: number; particle: boolean }
+export type Syllable = { base: string; tone: number; particle: boolean; alias?: string }
 
 // Every toneless pinyin syllable (ü written v) that pinyin-pro reads from a CJK character,
 // without the interjections m, n, ng and hng. Used to cut authored pinyin such as
@@ -34,7 +35,7 @@ const LONGEST_SYLLABLE = 6
 
 // Trailing syllables that carry no content: a learner (or speech recognition) may add or drop them.
 const PARTICLE_CHARS = new Set([...'啊呀哇啦呢吧吗嘛哦噢了'])
-const PARTICLE_SYLLABLES = new Set(['a', 'ya', 'wa', 'la', 'ne', 'ba', 'ma', 'le', 'ou', 'o', 'ei'])
+const PARTICLE_SYLLABLES = new Set(['a', 'ya', 'wa', 'la', 'ne', 'ba', 'ma', 'le', 'ou', 'o'])
 
 // 儿 is a syllable of its own in 女儿, 儿子 and the like; anywhere else it is the erhua suffix.
 const NOT_ERHUA_AFTER = new Set([...'女男孩婴幼独'])
@@ -43,13 +44,72 @@ const NOT_ERHUA_BEFORE = new Set([...'子童女'])
 const TONE_OF_MARK: Record<string, number> = { '̄': 1, '́': 2, '̌': 3, '̀': 4 }
 const DIAERESIS = '̈'
 
+const DIGIT_HANZI = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九']
+const PLACE_HANZI = ['', '十', '百', '千']
 
-/** Syllables of Chinese characters, each read in the context of the characters around it. */
+/**
+ * The characters a run of Arabic digits is read as, and which of them (by index) may be said 两.
+ * Up to four digits it is a number (30 is 三十, 105 is 一百零五, 2000 is 两千 or 二千); anything
+ * longer, or led by a zero, is read digit by digit like a phone number.
+ */
+function readDigits(digits: string): { chars: string[]; liang: number[] } {
+  if (digits.length > 4 || (digits.length > 1 && digits.startsWith('0'))) {
+    return { chars: [...digits].map((d) => DIGIT_HANZI[Number(d)]!), liang: [] }
+  }
+  const chars: string[] = []
+  const liang: number[] = []
+  let skipped = false
+  for (const [i, ch] of [...digits].entries()) {
+    const d = Number(ch)
+    const place = digits.length - 1 - i
+    if (d === 0) {
+      if (digits.length === 1) chars.push('零')
+      else skipped = true
+      continue
+    }
+    if (skipped) chars.push('零')
+    skipped = false
+    if (d === 2 && (digits.length === 1 || place >= 2)) liang.push(chars.length)
+    if (!(digits.length === 2 && i === 0 && d === 1)) chars.push(DIGIT_HANZI[d]!)
+    if (PLACE_HANZI[place]) chars.push(PLACE_HANZI[place]!)
+  }
+  return { chars, liang }
+}
+
+/** Text as characters, Arabic numerals read out as Chinese numbers; `liang` lists the 二 that may be 两. */
+function withNumeralsRead(text: string): { chars: string[]; liang: Set<number> } {
+  const chars: string[] = []
+  const liang = new Set<number>()
+  for (const part of text.split(/(\d+)/)) {
+    if (/^\d+$/.test(part)) {
+      const read = readDigits(part)
+      read.liang.forEach((i) => liang.add(chars.length + i))
+      chars.push(...read.chars)
+    } else {
+      chars.push(...part)
+    }
+  }
+  return { chars, liang }
+}
+
+/**
+ * Syllables of Chinese characters, each read in the context of the characters around it.
+ * Arabic numerals (which speech recognition returns for numbers) are read as Chinese numbers;
+ * punctuation, spaces and Latin letters are dropped.
+ */
 export function syllablesFromHanzi(text: string): Syllable[] {
+  const { chars: all, liang } = withNumeralsRead(text)
   const out: Syllable[] = []
-  for (const run of text.split(/[^\p{Script=Han}]+/u)) {
-    if (run === '') continue
-    const chars = [...run]
+  let start = 0
+  while (start < all.length) {
+    if (!/\p{Script=Han}/u.test(all[start]!)) {
+      start++
+      continue
+    }
+    let end = start
+    while (end < all.length && /\p{Script=Han}/u.test(all[end]!)) end++
+    const chars = all.slice(start, end)
+    const run = chars.join('')
     let readings = pinyin(run, { type: 'array', toneType: 'num', nonZh: 'removed' })
     if (readings.length !== chars.length) {
       // A character with no reading shifted the count: read each on its own so they stay aligned.
@@ -60,8 +120,11 @@ export function syllablesFromHanzi(text: string): Syllable[] {
       const m = /^([a-zü]+)(\d)?$/.exec(readings[i]!.toLowerCase())
       if (!m) return
       const base = m[1]!.replace('ü', 'v')
-      out.push({ base, tone: Number(m[2] ?? 0) % 5, particle: PARTICLE_CHARS.has(ch) })
+      const syllable: Syllable = { base, tone: Number(m[2] ?? 0) % 5, particle: PARTICLE_CHARS.has(ch) }
+      if (liang.has(start + i)) syllable.alias = 'liang'
+      out.push(syllable)
     })
+    start = end
   }
   return out
 }
@@ -92,7 +155,8 @@ function segment(letters: string): string[] | null {
 
 /**
  * Syllables of authored pinyin ("nín hǎo, qù nǎr?", "huǒchēzhàn"). Null when it is not pinyin
- * (or holds no syllable), so the caller can fall back to reading the characters.
+ * (or holds no syllable), so the caller can fall back to reading the characters. An erhua r is
+ * dropped, whether written against its syllable (nǎr) or apart (zhè r).
  */
 export function syllablesFromPinyin(text: string): Syllable[] | null {
   const out: Syllable[] = []
@@ -100,6 +164,12 @@ export function syllablesFromPinyin(text: string): Syllable[] | null {
   let tones: number[] = []
   const flush = (): boolean => {
     if (letters === '') return true
+    if (letters === 'r' && out.length > 0) {
+      // "zhè r": an erhua suffix set apart from its syllable
+      letters = ''
+      tones = []
+      return true
+    }
     const pieces = segment(letters)
     if (!pieces) return false
     let at = 0
@@ -129,9 +199,13 @@ export function syllablesFromPinyin(text: string): Syllable[] | null {
   return out
 }
 
-/** Drop the particles at the end of a line, keeping at least one syllable. */
+/**
+ * Drop the particles at the end of a line, keeping at least one syllable. A syllable that repeats
+ * the one before it (māma, bàba) is a word, not a particle. Both sides of a comparison go through
+ * here, so the same word is judged the same whether it came from characters or authored pinyin.
+ */
 export function withoutTrailingParticles(syllables: Syllable[]): Syllable[] {
   let end = syllables.length
-  while (end > 1 && syllables[end - 1]!.particle) end--
+  while (end > 1 && syllables[end - 1]!.particle && syllables[end - 2]!.base !== syllables[end - 1]!.base) end--
   return syllables.slice(0, end)
 }
