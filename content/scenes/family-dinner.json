@@ -1,0 +1,295 @@
+{
+  "id": "family-dinner",
+  "title": "Family dinner",
+  "show": "Original, in the style of a family comedy",
+  "source": "starter",
+  "level": "hsk1-2",
+  "defaultRole": "kid",
+  "characters": [
+    { "id": "mom", "name": "Mom" },
+    { "id": "kid", "name": "Kid" }
+  ],
+  "lines": [
+    {
+      "id": "family-dinner-1",
+      "character": "mom",
+      "position": 1,
+      "hanzi": "多吃点儿，这个鱼是你最爱吃的。",
+      "pinyin": "duō chī diǎnr, zhège yú shì nǐ zuì ài chī de.",
+      "english": "Eat more. This fish is your favorite.",
+      "variations": {
+        "paraphrase": {
+          "hanzi": "来，再吃点儿鱼，你不是最喜欢吃鱼吗？",
+          "pinyin": "lái, zài chī diǎnr yú, nǐ bú shì zuì xǐhuan chī yú ma?",
+          "english": "Come on, have some more fish. Isn't fish what you like best?"
+        },
+        "swap": {
+          "changes": "dish: fish becomes eggs",
+          "hanzi": "多吃点儿，这个鸡蛋是你最爱吃的。",
+          "pinyin": "duō chī diǎnr, zhège jīdàn shì nǐ zuì ài chī de.",
+          "english": "Eat more. These eggs are your favorite.",
+          "reply": {
+            "hanzi": "妈，我已经吃了很多鸡蛋了。",
+            "pinyin": "mā, wǒ yǐjīng chī le hěn duō jīdàn le.",
+            "english": "Mom, I've already eaten a lot of eggs."
+          }
+        },
+        "branch": {
+          "detour": [
+            {
+              "character": "mom",
+              "hanzi": "你想喝水吗？牛奶也有。",
+              "pinyin": "nǐ xiǎng hē shuǐ ma? niúnǎi yě yǒu.",
+              "english": "Do you want some water? There's milk too."
+            },
+            {
+              "character": "kid",
+              "hanzi": "喝水就好，谢谢妈。",
+              "pinyin": "hē shuǐ jiù hǎo, xièxie mā.",
+              "english": "Water's fine, thanks Mom."
+            }
+          ],
+          "steerBack": {
+            "character": "mom",
+            "hanzi": "好，给你水。来，多吃点儿，这个鱼是你最爱吃的。",
+            "pinyin": "hǎo, gěi nǐ shuǐ. lái, duō chī diǎnr, zhège yú shì nǐ zuì ài chī de.",
+            "english": "Okay, here's your water. Now eat more, this fish is your favorite."
+          }
+        }
+      }
+    },
+    {
+      "id": "family-dinner-2",
+      "character": "kid",
+      "position": 2,
+      "hanzi": "妈，我已经吃了很多了。",
+      "pinyin": "mā, wǒ yǐjīng chī le hěn duō le.",
+      "english": "Mom, I've already eaten a lot."
+    },
+    {
+      "id": "family-dinner-3",
+      "character": "mom",
+      "position": 3,
+      "hanzi": "就吃这么一点儿？你看你，工作那么忙，也不好好吃饭。",
+      "pinyin": "jiù chī zhème yì diǎnr? nǐ kàn nǐ, gōngzuò nàme máng, yě bù hǎohǎo chīfàn.",
+      "english": "That's all you're eating? Look at you, so busy with work and not even eating properly.",
+      "variations": {
+        "paraphrase": {
+          "hanzi": "你吃得太少了！工作这么忙，要好好吃饭。",
+          "pinyin": "nǐ chī de tài shǎo le! gōngzuò zhème máng, yào hǎohǎo chīfàn.",
+          "english": "You're not eating enough! With work this busy, you need to eat properly."
+        },
+        "swap": {
+          "changes": "habit: not eating properly becomes not sleeping properly",
+          "hanzi": "你看你，工作那么忙，也不好好睡觉。",
+          "pinyin": "nǐ kàn nǐ, gōngzuò nàme máng, yě bù hǎohǎo shuìjiào.",
+          "english": "Look at you, so busy with work and not even sleeping properly.",
+          "reply": {
+            "hanzi": "我天天都好好睡觉，妈，你别说了。",
+            "pinyin": "wǒ tiāntiān dōu hǎohǎo shuìjiào, mā, nǐ bié shuō le.",
+            "english": "I sleep properly every day. Mom, stop talking about it."
+          }
+        },
+        "branch": {
+          "detour": [
+            {
+              "character": "mom",
+              "hanzi": "你今天几点下班的？",
+              "pinyin": "nǐ jīntiān jǐ diǎn xiàbān de?",
+              "english": "What time did you get off work today?"
+            },
+            {
+              "character": "kid",
+              "hanzi": "六点下班，七点到家。",
+              "pinyin": "liù diǎn xiàbān, qī diǎn dào jiā.",
+              "english": "I got off at six and was home by seven."
+            }
+          ],
+          "steerBack": {
+            "character": "mom",
+            "hanzi": "这么晚！工作那么忙，要好好吃饭。",
+            "pinyin": "zhème wǎn! gōngzuò nàme máng, yào hǎohǎo chīfàn.",
+            "english": "So late! With work that busy, you need to eat properly."
+          }
+        }
+      }
+    },
+    {
+      "id": "family-dinner-4",
+      "character": "kid",
+      "position": 4,
+      "hanzi": "我天天都好好吃饭，妈，你别说了。",
+      "pinyin": "wǒ tiāntiān dōu hǎohǎo chīfàn, mā, nǐ bié shuō le.",
+      "english": "I eat properly every day. Mom, stop talking about it."
+    },
+    {
+      "id": "family-dinner-5",
+      "character": "mom",
+      "position": 5,
+      "hanzi": "对了，你最近有没有女朋友？",
+      "pinyin": "duì le, nǐ zuìjìn yǒu méi yǒu nǚ péngyou?",
+      "english": "By the way, have you got a girlfriend lately?",
+      "variations": {
+        "paraphrase": {
+          "hanzi": "对了，你现在有女朋友了吗？",
+          "pinyin": "duì le, nǐ xiànzài yǒu nǚ péngyou le ma?",
+          "english": "By the way, do you have a girlfriend now?"
+        },
+        "swap": {
+          "changes": "who is asking: Mom's own question becomes a rumor from your sister",
+          "hanzi": "对了，你妹妹说你有女朋友了，是真的吗？",
+          "pinyin": "duì le, nǐ mèimei shuō nǐ yǒu nǚ péngyou le, shì zhēn de ma?",
+          "english": "By the way, your sister says you have a girlfriend. Is it true?",
+          "reply": {
+            "hanzi": "不是真的！妹妹是说着玩儿的。这个鱼真好吃！",
+            "pinyin": "bú shì zhēn de! mèimei shì shuō zhe wánr de. zhège yú zhēn hǎochī!",
+            "english": "It's not true! My sister was just kidding. This fish is so good!"
+          }
+        },
+        "branch": {
+          "detour": [
+            {
+              "character": "mom",
+              "hanzi": "对了，你星期六有时间吗？",
+              "pinyin": "duì le, nǐ xīngqīliù yǒu shíjiān ma?",
+              "english": "By the way, are you free on Saturday?"
+            },
+            {
+              "character": "kid",
+              "hanzi": "有时间，怎么了？",
+              "pinyin": "yǒu shíjiān, zěnme le?",
+              "english": "I'm free. Why?"
+            }
+          ],
+          "steerBack": {
+            "character": "mom",
+            "hanzi": "我朋友的女儿很漂亮，你想认识她吗？",
+            "pinyin": "wǒ péngyou de nǚ'ér hěn piàoliang, nǐ xiǎng rènshi tā ma?",
+            "english": "My friend's daughter is very pretty. Do you want to meet her?"
+          }
+        }
+      }
+    },
+    {
+      "id": "family-dinner-6",
+      "character": "kid",
+      "position": 6,
+      "hanzi": "妈，这个鱼真好吃！是你做的吗？",
+      "pinyin": "mā, zhège yú zhēn hǎochī! shì nǐ zuò de ma?",
+      "english": "Mom, this fish is so good! Did you make it?"
+    },
+    {
+      "id": "family-dinner-7",
+      "character": "mom",
+      "position": 7,
+      "hanzi": "别说鱼了。我问你呢，你有没有喜欢的人？",
+      "pinyin": "bié shuō yú le. wǒ wèn nǐ ne, nǐ yǒu méi yǒu xǐhuan de rén?",
+      "english": "Forget the fish. I'm asking you: is there someone you like?",
+      "variations": {
+        "paraphrase": {
+          "hanzi": "鱼先不说。我问你，你有喜欢的人吗？",
+          "pinyin": "yú xiān bù shuō. wǒ wèn nǐ, nǐ yǒu xǐhuan de rén ma?",
+          "english": "Never mind the fish for now. I'm asking you, is there someone you like?"
+        },
+        "swap": {
+          "changes": "question: 'is there someone you like' becomes 'who is the person you like most'",
+          "hanzi": "别说鱼了。我问你呢，你最喜欢的人是谁？",
+          "pinyin": "bié shuō yú le. wǒ wèn nǐ ne, nǐ zuì xǐhuan de rén shì shéi?",
+          "english": "Forget the fish. I'm asking you: who is the person you like most?",
+          "reply": {
+            "hanzi": "我最喜欢的人就是你！",
+            "pinyin": "wǒ zuì xǐhuan de rén jiù shì nǐ!",
+            "english": "The person I like most is you!"
+          }
+        },
+        "branch": {
+          "detour": [
+            {
+              "character": "mom",
+              "hanzi": "手机给我看看。",
+              "pinyin": "shǒujī gěi wǒ kànkan.",
+              "english": "Let me see your phone."
+            },
+            {
+              "character": "kid",
+              "hanzi": "不给不给，手机里没有什么！",
+              "pinyin": "bù gěi bù gěi, shǒujī lǐ méiyǒu shénme!",
+              "english": "No way, there's nothing on my phone!"
+            }
+          ],
+          "steerBack": {
+            "character": "mom",
+            "hanzi": "好，不看就不看。那你告诉我，你有没有喜欢的人？",
+            "pinyin": "hǎo, bú kàn jiù bú kàn. nà nǐ gàosu wǒ, nǐ yǒu méi yǒu xǐhuan de rén?",
+            "english": "Fine, I won't look. Then you tell me: is there someone you like?"
+          }
+        }
+      }
+    },
+    {
+      "id": "family-dinner-8",
+      "character": "kid",
+      "position": 8,
+      "hanzi": "有，有，有！我最喜欢的人就是你。",
+      "pinyin": "yǒu, yǒu, yǒu! wǒ zuì xǐhuan de rén jiù shì nǐ.",
+      "english": "Yes, yes, yes! The person I like most is you."
+    },
+    {
+      "id": "family-dinner-9",
+      "character": "mom",
+      "position": 9,
+      "hanzi": "少来！我说真的。你也不小了，我和你爸都希望你有个家。",
+      "pinyin": "shǎo lái! wǒ shuō zhēn de. nǐ yě bù xiǎo le, wǒ hé nǐ bà dōu xīwàng nǐ yǒu ge jiā.",
+      "english": "Cut it out! I'm serious. You're not young anymore, and your dad and I want you to have a family of your own.",
+      "variations": {
+        "paraphrase": {
+          "hanzi": "少来！我不是说着玩儿的。你也不小了，爸爸和我都希望你有个家。",
+          "pinyin": "shǎo lái! wǒ bú shì shuō zhe wánr de. nǐ yě bù xiǎo le, bàba hé wǒ dōu xīwàng nǐ yǒu ge jiā.",
+          "english": "Cut it out! I'm not joking. You're not young anymore, and your dad and I want you to have a family of your own."
+        },
+        "swap": {
+          "changes": "what the parents hope for: a family of your own becomes more rest",
+          "hanzi": "少来！我说真的。你工作太忙了，我和你爸都希望你多休息。",
+          "pinyin": "shǎo lái! wǒ shuō zhēn de. nǐ gōngzuò tài máng le, wǒ hé nǐ bà dōu xīwàng nǐ duō xiūxi.",
+          "english": "Cut it out! I'm serious. You work too much, and your dad and I want you to rest more.",
+          "reply": {
+            "hanzi": "好好好，我知道了。以后我多休息。",
+            "pinyin": "hǎo hǎo hǎo, wǒ zhīdao le. yǐhòu wǒ duō xiūxi.",
+            "english": "Okay, okay, okay, I know. I'll rest more from now on."
+          }
+        },
+        "branch": {
+          "detour": [
+            {
+              "character": "mom",
+              "hanzi": "你知道吗？我三十岁的时候，你已经三岁了。",
+              "pinyin": "nǐ zhīdao ma? wǒ sānshí suì de shíhou, nǐ yǐjīng sān suì le.",
+              "english": "You know what? When I was thirty, you were already three."
+            },
+            {
+              "character": "kid",
+              "hanzi": "我知道，你说过很多次了。",
+              "pinyin": "wǒ zhīdao, nǐ shuō guo hěn duō cì le.",
+              "english": "I know, you've told me many times."
+            }
+          ],
+          "steerBack": {
+            "character": "mom",
+            "hanzi": "那你也要快一点儿。我说真的，爸爸和我都希望你有个家。",
+            "pinyin": "nà nǐ yě yào kuài yì diǎnr. wǒ shuō zhēn de, bàba hé wǒ dōu xīwàng nǐ yǒu ge jiā.",
+            "english": "Then you should hurry up a bit. I'm serious, your dad and I want you to have a family of your own."
+          }
+        }
+      }
+    },
+    {
+      "id": "family-dinner-10",
+      "character": "kid",
+      "position": 10,
+      "hanzi": "好好好，我知道了。有了女朋友，我第一个告诉你。",
+      "pinyin": "hǎo hǎo hǎo, wǒ zhīdao le. yǒu le nǚ péngyou, wǒ dì yī ge gàosu nǐ.",
+      "english": "Okay, okay, okay, I know. When I have a girlfriend, you'll be the first to hear."
+    }
+  ],
+  "vocabExceptions": []
+}

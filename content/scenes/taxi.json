@@ -1,0 +1,300 @@
+{
+  "id": "taxi",
+  "title": "Taxi to the train station",
+  "show": "Original, in the style of a city drama",
+  "source": "starter",
+  "level": "hsk1-2",
+  "defaultRole": "passenger",
+  "characters": [
+    { "id": "driver", "name": "Driver" },
+    { "id": "passenger", "name": "Passenger" }
+  ],
+  "lines": [
+    {
+      "id": "taxi-1",
+      "character": "driver",
+      "position": 1,
+      "hanzi": "您好，去哪儿？",
+      "pinyin": "nín hǎo, qù nǎr?",
+      "english": "Hello, where to?",
+      "variations": {
+        "paraphrase": {
+          "hanzi": "您好，您想去哪里？",
+          "pinyin": "nín hǎo, nín xiǎng qù nǎlǐ?",
+          "english": "Hello, where would you like to go?"
+        },
+        "swap": {
+          "changes": "the driver guesses a destination: the airport",
+          "hanzi": "您好，去机场吗？",
+          "pinyin": "nín hǎo, qù jīchǎng ma?",
+          "english": "Hello, going to the airport?",
+          "reply": {
+            "hanzi": "不是，师傅，去火车站。我的火车十点开，现在已经九点了。",
+            "pinyin": "bú shì, shīfu, qù huǒchēzhàn. wǒ de huǒchē shí diǎn kāi, xiànzài yǐjīng jiǔ diǎn le.",
+            "english": "No, driver, to the train station. My train leaves at ten and it's already nine."
+          }
+        },
+        "branch": {
+          "detour": [
+            {
+              "character": "driver",
+              "hanzi": "您好，请上车。今天天气很好，是不是？",
+              "pinyin": "nín hǎo, qǐng shàng chē. jīntiān tiānqì hěn hǎo, shì bu shì?",
+              "english": "Hello, hop in. Nice weather today, isn't it?"
+            },
+            {
+              "character": "passenger",
+              "hanzi": "是，天气很好，就是有点儿热。",
+              "pinyin": "shì, tiānqì hěn hǎo, jiùshì yǒudiǎnr rè.",
+              "english": "Yes, it's nice, just a bit hot."
+            }
+          ],
+          "steerBack": {
+            "character": "driver",
+            "hanzi": "对，今天真热。您去哪儿？",
+            "pinyin": "duì, jīntiān zhēn rè. nín qù nǎr?",
+            "english": "Right, it's really hot today. Where to?"
+          }
+        }
+      }
+    },
+    {
+      "id": "taxi-2",
+      "character": "passenger",
+      "position": 2,
+      "hanzi": "师傅，去火车站。我的火车十点开，现在已经九点了。",
+      "pinyin": "shīfu, qù huǒchēzhàn. wǒ de huǒchē shí diǎn kāi, xiànzài yǐjīng jiǔ diǎn le.",
+      "english": "Driver, to the train station please. My train leaves at ten and it's already nine."
+    },
+    {
+      "id": "taxi-3",
+      "character": "driver",
+      "position": 3,
+      "hanzi": "九点了？路上车不多的话，二十分钟就到。",
+      "pinyin": "jiǔ diǎn le? lùshang chē bù duō de huà, èrshí fēnzhōng jiù dào.",
+      "english": "Nine already? If there aren't many cars on the road, we'll be there in twenty minutes.",
+      "variations": {
+        "paraphrase": {
+          "hanzi": "九点？路上车少的话，二十分钟就能到。",
+          "pinyin": "jiǔ diǎn? lùshang chē shǎo de huà, èrshí fēnzhōng jiù néng dào.",
+          "english": "Nine? If the road is quiet, we can be there in twenty minutes."
+        },
+        "swap": {
+          "changes": "travel time: twenty minutes becomes forty because of traffic",
+          "hanzi": "九点了？这个时候车很多，要四十分钟。",
+          "pinyin": "jiǔ diǎn le? zhège shíhou chē hěn duō, yào sìshí fēnzhōng.",
+          "english": "Nine already? There are lots of cars at this time, it'll take forty minutes.",
+          "reply": {
+            "hanzi": "四十分钟？那太慢了！师傅，能快一点儿吗？我的火车不等人。",
+            "pinyin": "sìshí fēnzhōng? nà tài màn le! shīfu, néng kuài yìdiǎnr ma? wǒ de huǒchē bù děng rén.",
+            "english": "Forty minutes? That's too slow! Driver, can you go a bit faster? My train won't wait for anyone."
+          }
+        },
+        "branch": {
+          "detour": [
+            {
+              "character": "driver",
+              "hanzi": "九点了？您有票了吗？",
+              "pinyin": "jiǔ diǎn le? nín yǒu piào le ma?",
+              "english": "Nine already? Do you have your ticket yet?"
+            },
+            {
+              "character": "passenger",
+              "hanzi": "有，票在手机里。",
+              "pinyin": "yǒu, piào zài shǒujī lǐ.",
+              "english": "Yes, the ticket is on my phone."
+            }
+          ],
+          "steerBack": {
+            "character": "driver",
+            "hanzi": "好。路上车不多的话，二十分钟就到。",
+            "pinyin": "hǎo. lùshang chē bù duō de huà, èrshí fēnzhōng jiù dào.",
+            "english": "Good. If there aren't many cars on the road, we'll be there in twenty minutes."
+          }
+        }
+      }
+    },
+    {
+      "id": "taxi-4",
+      "character": "passenger",
+      "position": 4,
+      "hanzi": "太好了！能快一点儿吗？我的火车不等人。",
+      "pinyin": "tài hǎo le! néng kuài yìdiǎnr ma? wǒ de huǒchē bù děng rén.",
+      "english": "Great! Can you go a bit faster? My train won't wait for anyone."
+    },
+    {
+      "id": "taxi-5",
+      "character": "driver",
+      "position": 5,
+      "hanzi": "好，我走左边的路，会快一点儿。可以吗？",
+      "pinyin": "hǎo, wǒ zǒu zuǒbian de lù, huì kuài yìdiǎnr. kěyǐ ma?",
+      "english": "Okay, I'll take the road on the left, it'll be a bit faster. Is that all right?",
+      "variations": {
+        "paraphrase": {
+          "hanzi": "好的，我从左边走，那边会快一点儿，可以吗？",
+          "pinyin": "hǎo de, wǒ cóng zuǒbian zǒu, nàbian huì kuài yìdiǎnr, kěyǐ ma?",
+          "english": "Sure, I'll go by the left side, it's a bit faster that way. Is that all right?"
+        },
+        "swap": {
+          "changes": "route: the road on the left becomes the road on the right",
+          "hanzi": "好，我走右边的路，会快一点儿。可以吗？",
+          "pinyin": "hǎo, wǒ zǒu yòubian de lù, huì kuài yìdiǎnr. kěyǐ ma?",
+          "english": "Okay, I'll take the road on the right, it'll be a bit faster. Is that all right?",
+          "reply": {
+            "hanzi": "可以，那就走右边，我听您的。",
+            "pinyin": "kěyǐ, nà jiù zǒu yòubian, wǒ tīng nín de.",
+            "english": "Sure, then let's go right. I'll go with whatever you say."
+          }
+        },
+        "branch": {
+          "detour": [
+            {
+              "character": "driver",
+              "hanzi": "好。您是不是第一次来这儿？",
+              "pinyin": "hǎo. nín shì bu shì dì yī cì lái zhèr?",
+              "english": "Okay. Is this your first time here?"
+            },
+            {
+              "character": "passenger",
+              "hanzi": "不是，我在这儿工作，但是不太认识路。",
+              "pinyin": "bú shì, wǒ zài zhèr gōngzuò, dànshì bú tài rènshi lù.",
+              "english": "No, I work here, but I don't really know the roads."
+            }
+          ],
+          "steerBack": {
+            "character": "driver",
+            "hanzi": "没问题，我认识路。我走左边的路，可以吗？",
+            "pinyin": "méi wèntí, wǒ rènshi lù. wǒ zǒu zuǒbian de lù, kěyǐ ma?",
+            "english": "No problem, I know the way. I'll take the road on the left, is that all right?"
+          }
+        }
+      }
+    },
+    {
+      "id": "taxi-6",
+      "character": "passenger",
+      "position": 6,
+      "hanzi": "可以，您知道怎么走，我听您的。",
+      "pinyin": "kěyǐ, nín zhīdao zěnme zǒu, wǒ tīng nín de.",
+      "english": "Sure. You know the way, I'll go with whatever you say."
+    },
+    {
+      "id": "taxi-7",
+      "character": "driver",
+      "position": 7,
+      "hanzi": "火车站有两个门，您去哪个门？",
+      "pinyin": "huǒchēzhàn yǒu liǎng ge mén, nín qù nǎ ge mén?",
+      "english": "The station has two gates. Which gate are you going to?",
+      "variations": {
+        "paraphrase": {
+          "hanzi": "您在哪个门下车？火车站有两个门。",
+          "pinyin": "nín zài nǎ ge mén xiàchē? huǒchēzhàn yǒu liǎng ge mén.",
+          "english": "Which gate do you want to get out at? The station has two gates."
+        },
+        "swap": {
+          "changes": "question: which gate you are going to becomes which gate your friend is waiting at",
+          "hanzi": "火车站有两个门，您的朋友在哪个门等您？",
+          "pinyin": "huǒchēzhàn yǒu liǎng ge mén, nín de péngyou zài nǎ ge mén děng nín?",
+          "english": "The station has two gates. Which gate is your friend waiting at?",
+          "reply": {
+            "hanzi": "他在东门等我。",
+            "pinyin": "tā zài dōngmén děng wǒ.",
+            "english": "He's waiting for me at the east gate."
+          }
+        },
+        "branch": {
+          "detour": [
+            {
+              "character": "driver",
+              "hanzi": "您的朋友也坐火车吗？",
+              "pinyin": "nín de péngyou yě zuò huǒchē ma?",
+              "english": "Is your friend taking the train too?"
+            },
+            {
+              "character": "passenger",
+              "hanzi": "对，我们一起去北京。",
+              "pinyin": "duì, wǒmen yìqǐ qù běijīng.",
+              "english": "Yes, we're going to Beijing together."
+            }
+          ],
+          "steerBack": {
+            "character": "driver",
+            "hanzi": "好。火车站有两个门，您去哪个门？",
+            "pinyin": "hǎo. huǒchēzhàn yǒu liǎng ge mén, nín qù nǎ ge mén?",
+            "english": "Good. The station has two gates. Which gate are you going to?"
+          }
+        }
+      }
+    },
+    {
+      "id": "taxi-8",
+      "character": "passenger",
+      "position": 8,
+      "hanzi": "去东门，我朋友在那儿等我。",
+      "pinyin": "qù dōngmén, wǒ péngyou zài nàr děng wǒ.",
+      "english": "To the east gate. My friend is waiting for me there."
+    },
+    {
+      "id": "taxi-9",
+      "character": "driver",
+      "position": 9,
+      "hanzi": "东门到了，三十块。",
+      "pinyin": "dōngmén dào le, sānshí kuài.",
+      "english": "We're at the east gate. Thirty yuan.",
+      "variations": {
+        "paraphrase": {
+          "hanzi": "到东门了，要三十块钱。",
+          "pinyin": "dào dōngmén le, yào sānshí kuài qián.",
+          "english": "We've reached the east gate. That's thirty yuan."
+        },
+        "swap": {
+          "changes": "fare: thirty yuan becomes forty",
+          "hanzi": "东门到了，四十块。",
+          "pinyin": "dōngmén dào le, sìshí kuài.",
+          "english": "We're at the east gate. Forty yuan.",
+          "reply": {
+            "hanzi": "给您，四十块。谢谢师傅，再见！",
+            "pinyin": "gěi nín, sìshí kuài. xièxie shīfu, zàijiàn!",
+            "english": "Here you go, forty yuan. Thanks, driver. Bye!"
+          }
+        },
+        "branch": {
+          "detour": [
+            {
+              "character": "driver",
+              "hanzi": "东门到了。您有零钱吗？",
+              "pinyin": "dōngmén dào le. nín yǒu língqián ma?",
+              "english": "We're at the east gate. Do you have small change?"
+            },
+            {
+              "character": "passenger",
+              "hanzi": "有，没问题。",
+              "pinyin": "yǒu, méi wèntí.",
+              "english": "Yes, no problem."
+            }
+          ],
+          "steerBack": {
+            "character": "driver",
+            "hanzi": "好，三十块。",
+            "pinyin": "hǎo, sānshí kuài.",
+            "english": "Good. Thirty yuan."
+          }
+        }
+      }
+    },
+    {
+      "id": "taxi-10",
+      "character": "passenger",
+      "position": 10,
+      "hanzi": "给您，三十块。谢谢师傅，再见！",
+      "pinyin": "gěi nín, sānshí kuài. xièxie shīfu, zàijiàn!",
+      "english": "Here you go, thirty yuan. Thanks, driver. Bye!"
+    }
+  ],
+  "vocabExceptions": [
+    {
+      "word": "师傅",
+      "reason": "The everyday way to address a taxi driver; 傅 is outside HSK 1-2 but the scene sounds wrong without it."
+    }
+  ]
+}
