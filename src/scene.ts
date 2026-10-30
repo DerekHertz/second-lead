@@ -10,5 +10,11 @@ export type Line = { roleId: string; hanzi: string; pinyin: string; words: Word[
 /** A character the learner can play. */
 export type Role = { id: string; name: string }
 
-/** A short stretch of dialogue between named roles. */
-export type Scene = { id: string; title: string; roles: Role[]; lines: Line[] }
+/** A short stretch of dialogue between named roles, and the show it comes from. */
+export type Scene = { id: string; title: string; show?: string; roles: Role[]; lines: Line[] }
+
+/**
+ * How much help a line shows, from most to least (docs/mvp.md): 0 characters, pinyin and English;
+ * 1 characters and pinyin; 2 the English meaning only; 3 nothing.
+ */
+export type SupportLevel = 0 | 1 | 2 | 3

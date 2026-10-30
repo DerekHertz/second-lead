@@ -5,6 +5,7 @@ import type { Line, Scene, Word } from '../scene'
 export type SceneFile = {
   id: string
   title: string
+  show?: string
   characters: { id: string; name: string }[]
   lines: { character: string; hanzi: string; pinyin: string; english: string }[]
 }
@@ -56,6 +57,7 @@ export function sceneFromFile(file: SceneFile): Scene {
   return {
     id: file.id,
     title: file.title,
+    show: file.show,
     roles: file.characters.map((c) => ({ id: c.id, name: c.name })),
     lines: file.lines.map(
       (l): Line => ({
