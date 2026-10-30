@@ -154,6 +154,43 @@ describe('judging the learner’s spoken line', () => {
   })
 })
 
+describe('the cue: when the microphone opens', () => {
+  it('pauses listening when the learner taps the mic, and listens again on the next tap', async () => {
+    const { take, provider } = begin(dinner, 'kid')
+    await until(take, 'listening')
+    take.pause()
+    await until(take, 'no-input')
+    expect(provider.listening).toBe(false)
+    expect(take.getState().notice).toBeNull()
+    take.listenAgain()
+    await until(take, 'listening')
+    expect(provider.listenCount).toBe(2)
+  })
+
+  it('with auto-cue off, waits on the learner’s line until they start listening', async () => {
+    const provider = new FakeSpeechProvider()
+    const take = createTake({ scene: dinner, roleId: 'kid', provider, autoCue: false })
+    take.start()
+    await until(take, 'no-input')
+    expect(take.getState().index).toBe(1)
+    expect(provider.listenCount).toBe(0)
+    take.listenAgain()
+    await until(take, 'listening')
+  })
+
+  it('applies a change of auto-cue from the next line on', async () => {
+    const { take, provider } = begin(dinner, 'kid')
+    await until(take, 'listening')
+    take.setAutoCue(false)
+    provider.hear(dinner.lines[1]!.hanzi)
+    await until(take, 'reviewing')
+    take.next()
+    await until(take, 'no-input')
+    expect(take.getState().index).toBe(3)
+    expect(provider.listenCount).toBe(1)
+  })
+})
+
 describe('hints', () => {
   async function atKidLine() {
     const ctx = begin(dinner, 'kid')

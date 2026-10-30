@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 test('the app loads offline after a first visit', async ({ page, context }) => {
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'Pick a scene' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Second Lead' })).toBeVisible()
 
   // The first visit installs the service worker; wait until it controls the page.
   await page.evaluate(async () => {
@@ -18,10 +18,11 @@ test('the app loads offline after a first visit', async ({ page, context }) => {
   await context.setOffline(true)
   await page.reload()
 
-  await expect(page.getByRole('heading', { name: 'Pick a scene' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Second Lead' })).toBeVisible()
   await page.getByRole('button', { name: 'Taxi to the train station' }).click()
-  await page.getByRole('button', { name: 'Passenger' }).click()
   await expect(page.getByRole('heading', { name: 'Taxi to the train station' })).toBeVisible()
-  await expect(page.getByText('You play Passenger.')).toBeVisible()
+  await page.getByRole('button', { name: 'Passenger' }).click()
+  await page.getByRole('button', { name: 'Begin' }).click()
+  await expect(page.getByRole('region', { name: 'Page 1' })).toBeVisible()
   await expect(page.getByRole('status')).toBeVisible()
 })
